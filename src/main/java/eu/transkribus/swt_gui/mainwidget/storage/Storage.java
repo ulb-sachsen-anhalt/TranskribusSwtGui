@@ -38,6 +38,7 @@ import org.dea.fimagestore.core.beans.ImageMetadata;
 import org.dea.fimgstoreclient.FimgStoreGetClient;
 import org.dea.fimgstoreclient.beans.FimgStoreTxt;
 import org.dea.fimgstoreclient.beans.ImgType;
+import org.docx4j.docProps.core.dc.terms.URI;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
@@ -2318,7 +2319,8 @@ public class Storage {
 				}
 			}
 		};
-		DocExporter de = new DocExporter(conn.newFImagestoreGetClient(), cache);
+		logger.warn("use custom ULBLocalDocExporter");
+		ULBLocalDocExporter de = new ULBLocalDocExporter();
 		de.addObserver(o);
 		de.writeRawDoc(doc, path, true, pageIndices, exportImg, exportPage, exportAlto, splitIntoWordsInAlto, useWordLayer, fileNamePattern, imgType);
 
