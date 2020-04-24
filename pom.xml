@@ -56,12 +56,6 @@
 					<exclude>How_to_use_TRANSKRIBUS-0.1.7.pdf</exclude>
 				</excludes>
 			</resource>
-
-			<!-- Include source code -->
-			<resource>
-				<directory>src/main/java</directory>
-				<filtering>false</filtering>
-			</resource>
 		</resources>
 		
 	    <filters>
