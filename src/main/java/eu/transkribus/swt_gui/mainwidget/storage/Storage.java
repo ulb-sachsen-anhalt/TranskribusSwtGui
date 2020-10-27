@@ -2938,14 +2938,14 @@ public class Storage {
 		conn.deleteHtr(getCollId(), htr.getHtrId());
 	}
 	
-	public void updateHtrMetadata(TrpHtr htr) throws NoConnectionException, TrpServerErrorException, TrpClientErrorException, SessionExpiredException {
+	public TrpHtr updateHtrMetadata(TrpHtr htr) throws NoConnectionException, TrpServerErrorException, TrpClientErrorException, SessionExpiredException {
 		checkConnection(true);
 		if(htr == null) {
 			logger.debug("htr argument is null in deleteHtr. Doing nothing.");
-			return;
+			return null;
 		}
-		conn.updateHtrMetadata(getCollId(), htr);
-		
+		return conn.updateHtrMetadata(getCollId(), htr);
+		//FIXME next line is commented out, but data in tables is now outdated!
 		//reloadHtrs();
 	}
 	

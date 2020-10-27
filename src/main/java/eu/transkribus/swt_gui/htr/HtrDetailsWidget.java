@@ -255,7 +255,13 @@ public class HtrDetailsWidget extends SashForm {
 			docTypeCombo.add(e.getKey());
 			docTypeCombo.setData(e.getKey(), e.getValue());
 		}
-		docTypeCombo.setEnabled(false);
+		if(store.isAdminLoggedIn()) {
+			docTypeCombo.setEnabled(htr != null && store.isAdminLoggedIn());
+			//do not attach validator to disabled fields
+			validator.attach("Document Type", docTypeCombo, -1, -1, h -> "" + h.getDocType());
+		} else {
+			docTypeCombo.setEnabled(false);
+		}
 	}
 
 	void updateDetails(TrpHtr htr) {		
@@ -265,6 +271,7 @@ public class HtrDetailsWidget extends SashForm {
 		if(publishStateCombo != null) {
 			publishStateCombo.setEnabled(htr != null);
 		}
+		docTypeCombo.setEnabled(htr != null && store.isAdminLoggedIn());
 		
 		nameTxt.setEnabled(htr != null);
 		descTxt.setEnabled(htr != null);
@@ -286,6 +293,7 @@ public class HtrDetailsWidget extends SashForm {
 			if(publishStateCombo != null) {
 				publishStateCombo.select(0);
 			}
+			docTypeCombo.deselectAll();
 			showCharSetBtn.setEnabled(false);
 			showValSetBtn.setEnabled(false);
 			showTrainSetBtn.setEnabled(false);
@@ -301,6 +309,7 @@ public class HtrDetailsWidget extends SashForm {
 		nrOfWordsTxt.setText(htr.getNrOfWords() > 0 ? "" + htr.getNrOfWords() : NOT_AVAILABLE);
 		nrOfLinesTxt.setText(htr.getNrOfLines() > 0 ? "" + htr.getNrOfLines() : NOT_AVAILABLE);
 
+		logger.debug("Setting docType: {} -> {}", htr.getDocType(), DocType.fromValue(htr.getDocType()));
 		for(int i = 0; i < docTypeCombo.getItemCount(); i++) {
 			if(docTypeCombo.getData(docTypeCombo.getItem(i)).equals(htr.getDocType())) {
 				docTypeCombo.select(i);
@@ -665,8 +674,15 @@ public class HtrDetailsWidget extends SashForm {
 			htrToStore.setReleaseLevel((ReleaseLevel) publishStateData);
 		}
 		
+		if(store.isAdminLoggedIn()) {
+			//in contrast to the ReleaseLevel, there is only a getter for the int value :/
+			Integer docTypeValue = (Integer) docTypeCombo.getData(docTypeCombo.getText());
+			htrToStore.setDocType(docTypeValue);
+		}
+		
 		try {
-			store.updateHtrMetadata(htrToStore);
+			TrpHtr storedHtr = store.updateHtrMetadata(htrToStore);
+			logger.debug("HTR updated: {}", storedHtr);
 			//reset the text fields to new values
 			updateDetails(htrToStore);
 			DialogUtil.showBalloonToolTip(updateMetadataBtn, SWT.ICON_INFORMATION, "", "Changes saved.");

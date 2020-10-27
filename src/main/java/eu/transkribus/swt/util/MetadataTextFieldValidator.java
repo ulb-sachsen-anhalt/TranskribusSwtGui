@@ -1,5 +1,6 @@
 package eu.transkribus.swt.util;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
@@ -7,13 +8,14 @@ import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Widget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MetadataTextFieldValidator<T> {
 	private static final Logger logger = LoggerFactory.getLogger(MetadataTextFieldValidator.class);
 	
-	List<MetadataInputFieldWrapper> textFields;
+	List<MetadataInputFieldWrapper<?>> textFields;
 	
 	public MetadataTextFieldValidator() {
 		textFields = new LinkedList<>();
@@ -29,7 +31,7 @@ public class MetadataTextFieldValidator<T> {
 	 * @param getter the function for retrieving the original value from the object, e.g. a getter
 	 */
 	public void attach(String name, Text textField, final int sizeLowerBound, final int sizeUpperBound, Function<T, String> getter) {
-		textFields.add(new MetadataTextFieldWrapper(name, textField, sizeLowerBound, sizeUpperBound, getter));
+		attach(new MetadataTextFieldWrapper(name, textField, sizeLowerBound, sizeUpperBound, getter));
 	}
 	
 	/**
@@ -43,7 +45,47 @@ public class MetadataTextFieldValidator<T> {
 	 * It needs to return a String representation of the Object associated with the label value. This is what hasInputChanged() will compare.
 	 */
 	public void attach(String name, Combo combo, final int sizeLowerBound, final int sizeUpperBound, Function<T, String> getter) {
-		textFields.add(new MetadataComboFieldWrapper(name, combo, sizeLowerBound, sizeUpperBound, getter));
+		attach(new MetadataComboFieldWrapper(name, combo, sizeLowerBound, sizeUpperBound, getter));
+	}
+	
+	protected void attach(MetadataInputFieldWrapper<?> wrapper) {
+		for(MetadataInputFieldWrapper<?> w : textFields) {
+			if(w.getName().equals(wrapper.getName())) {
+				logger.debug("Not attaching validator to value '{}'. Already attached.", w.getName());
+				return;
+			}
+		}
+		textFields.add(wrapper);
+	}
+	/**
+	 * Detach the validator from an input field.
+	 * 
+	 * @param name the name of the text field as shown in the label
+	 */
+	public void detach(String name) {
+		Iterator<MetadataInputFieldWrapper<?>> it = textFields.iterator();
+		while (it.hasNext()) {
+			if(it.next().getName().equals(name)) {
+				logger.debug("Detaching validator from value '{}'.", name);
+				it.remove();
+			}
+		}
+	}
+	/**
+	 * Detach the validator from an input field.
+	 * 
+	 * @param widget the input field widget to detach the validator from
+	 */
+	//Not yet tested.
+	private void detach(Widget widget) {
+		Iterator<MetadataInputFieldWrapper<?>> it = textFields.iterator();
+		while (it.hasNext()) {
+			MetadataInputFieldWrapper<?> wrapper = it.next();
+			if(wrapper.getWidget().equals(widget)) {
+				logger.debug("Detaching validator from '{}' - {}.", wrapper.getName(), wrapper.getWidget());
+				it.remove();
+			}
+		}
 	}
 	
 	/**
@@ -65,7 +107,7 @@ public class MetadataTextFieldValidator<T> {
 	 */
 	public boolean hasInputChanged() {
 		boolean hasChanged = false;
-		for(MetadataInputFieldWrapper w : textFields) {
+		for(MetadataInputFieldWrapper<?> w : textFields) {
 			hasChanged |= w.hasChanged();
 		}
 		return hasChanged;
@@ -76,7 +118,7 @@ public class MetadataTextFieldValidator<T> {
 	 */
 	public List<String> getValidationErrorMessages() {
 		List<String> messages = new LinkedList<>();
-		for(MetadataInputFieldWrapper w : textFields) {
+		for(MetadataInputFieldWrapper<?> w : textFields) {
 			final String msg = w.validate();
 			if(!StringUtils.isEmpty(msg)) {
 				messages.add(msg);
@@ -88,19 +130,17 @@ public class MetadataTextFieldValidator<T> {
 	/**
 	 * Checks if input value differs from original value and validates w.r.t. lower/upper size limit
 	 */
-	class MetadataTextFieldWrapper extends MetadataInputFieldWrapper {
-		final Text textField;
+	class MetadataTextFieldWrapper extends MetadataInputFieldWrapper<Text> {
 		
 		MetadataTextFieldWrapper(String name, Text textField, final int sizeLowerBound, final int sizeUpperBound, Function<T, String> getter) {
-			super(name, sizeLowerBound, sizeUpperBound, getter);
-			this.textField = textField;
+			super(name, textField, sizeLowerBound, sizeUpperBound, getter);
 		}
 		
 		/**
 		 * @return the current value entered in the text field
 		 */
 		String getValue() {
-			String value = textField.getText();
+			String value = getWidget().getText();
 			if (value == null) {
 				return "";
 			} else {
@@ -112,20 +152,18 @@ public class MetadataTextFieldValidator<T> {
 	/**
 	 * Checks if input value differs from original value and validates w.r.t. lower/upper size limit
 	 */
-	class MetadataComboFieldWrapper extends MetadataInputFieldWrapper {
-		final Combo combo;
+	class MetadataComboFieldWrapper extends MetadataInputFieldWrapper<Combo> {
 		
 		MetadataComboFieldWrapper(String name, Combo combo, final int sizeLowerBound, final int sizeUpperBound, Function<T, String> getter) {
-			super(name, sizeLowerBound, sizeUpperBound, getter);
-			this.combo = combo;
+			super(name, combo, sizeLowerBound, sizeUpperBound, getter);
 		}
 		
 		/**
 		 * @return the current object data associated with the text value in the combo
 		 */
 		String getValue() {
-			Object data = combo.getData(combo.getText());
-			if(!combo.isEnabled() || data == null) {
+			Object data = getWidget().getData(getWidget().getText());
+			if(!getWidget().isEnabled() || data == null) {
 				return "";
 			}
 			return "" + data;
@@ -134,23 +172,34 @@ public class MetadataTextFieldValidator<T> {
 	
 	/**
 	 * Checks if input value differs from original value and validates w.r.t. lower/upper size limit
+	 * @param <W>
 	 */
-	abstract class MetadataInputFieldWrapper {
+	abstract class MetadataInputFieldWrapper<W> {
 		final int sizeUpperBound, sizeLowerBound;
 		final Function<T, String> getter;
 		final String name;
 		T object;
+		W widget;
 		
-		protected MetadataInputFieldWrapper(String name, final int sizeLowerBound, final int sizeUpperBound, Function<T, String> getter) {
+		protected MetadataInputFieldWrapper(String name, W widget, final int sizeLowerBound, final int sizeUpperBound, Function<T, String> getter) {
 			this.name = name;
 			this.sizeUpperBound = sizeUpperBound;
 			this.sizeLowerBound = sizeLowerBound;
 			this.getter = getter;
 			this.object = null;
+			this.widget = widget;
 		}
 		
 		void setObject(T object) {
 			this.object = object;
+		}
+		
+		String getName() {
+			return name;
+		}
+		
+		W getWidget() {
+			return widget;
 		}
 		
 		/**
