@@ -43,9 +43,7 @@ public class CreditPackagesUserPagedTableWidget extends ATableWidgetPagination<T
 	
 	RemotePageLoaderSingleRequest<TrpCreditPackageList, TrpCreditPackage> pageLoader;
 	
-	OverallBalanceComposite overallBalanceComp;
-	
-	Button createBtn;
+	protected OverallBalanceComposite overallBalanceComp;
 
 	public CreditPackagesUserPagedTableWidget(Composite parent, int style) {
 		super(parent, style, 25);
@@ -57,21 +55,10 @@ public class CreditPackagesUserPagedTableWidget extends ATableWidgetPagination<T
 	protected void createOverallBalanceComposite(PageableTable pageableTable) {
 		// Create the composite in the bottom right of the table widget
 		Composite parent = pageableTable.getCompositeBottom();
-		int layoutColsIncrement = 2;
-		
-		if(Storage.getInstance().isAdminLoggedIn()) {
-			createBtn = new Button(parent, SWT.PUSH);
-			createBtn.setImage(Images.ADD);
-			createBtn.setToolTipText("Create a credit package...");
-			layoutColsIncrement += 1;
-		}
-		
-		//create Label to occupy space in the middle and push other stuff to the right
-		Label space = new Label(parent, SWT.NONE);
-		space.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, true));
+		int layoutColsIncrement = 1;
 		
 		overallBalanceComp = new OverallBalanceComposite(parent, SWT.NONE);
-		overallBalanceComp.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, true));
+		overallBalanceComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		//adjust layout of bottom
 		GridLayout layout = (GridLayout) parent.getLayout();
@@ -85,10 +72,6 @@ public class CreditPackagesUserPagedTableWidget extends ATableWidgetPagination<T
 
 	public void setSelection(int packageId) {
 		// TODO
-	}
-	
-	public Button getCreatePackageBtn() {
-		return createBtn;
 	}
 	
 	@Override
@@ -151,7 +134,7 @@ public class CreditPackagesUserPagedTableWidget extends ATableWidgetPagination<T
 						return store.getConnection().getCreditCalls().getCreditPackagesByUser(fromIndex, toIndex - fromIndex,
 								sortPropertyName, sortDirection);
 					} catch (SessionExpiredException | ServerErrorException | IllegalArgumentException e) {
-						TrpMainWidget.getInstance().onError("Error loading HTRs", e.getMessage(), e);
+						TrpMainWidget.getInstance().onError("Error loading Credit Packages", e.getMessage(), e);
 					}
 				}
 				return new TrpCreditPackageList(new ArrayList<>(), 0.0d, 0, 0, 0, null, null);
@@ -191,7 +174,7 @@ public class CreditPackagesUserPagedTableWidget extends ATableWidgetPagination<T
 			Fonts.setBoldFont(overallBalanceLbl);
 			
 			overallBalanceValueTxt = new Text(this, SWT.BORDER | SWT.READ_ONLY);
-			overallBalanceValueTxt.setLayoutData(new GridData(GridData.END, SWT.CENTER, true, false));
+			overallBalanceValueTxt.setLayoutData(new GridData(GridData.FILL_BOTH));
 			
 			showDetailsBtn = new Button(this, SWT.PUSH);
 			showDetailsBtn.setImage(Images.getOrLoad("/icons/calculator.png"));
@@ -209,8 +192,6 @@ public class CreditPackagesUserPagedTableWidget extends ATableWidgetPagination<T
 
 			overallBalanceValueTxt.setText(txt);
 			overallBalanceValueTxt.pack();
-			this.pack();
-			this.getParent().pack();
 		}
 	}
 }

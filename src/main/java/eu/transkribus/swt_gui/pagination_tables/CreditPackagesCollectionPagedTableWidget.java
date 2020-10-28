@@ -6,12 +6,7 @@ import javax.ws.rs.ServerErrorException;
 
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ViewerCell;
-import org.eclipse.nebula.widgets.pagination.table.PageableTable;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +48,7 @@ public class CreditPackagesCollectionPagedTableWidget extends CreditPackagesUser
 					try {
 						return store.getConnection().getCreditCalls().getCreditPackagesByCollection(collection.getColId(), fromIndex, toIndex-fromIndex, sortPropertyName, sortDirection);
 					} catch (SessionExpiredException | ServerErrorException | IllegalArgumentException e) {
-						TrpMainWidget.getInstance().onError("Error loading HTRs", e.getMessage(), e);
+						TrpMainWidget.getInstance().onError("Error loading Credit Packages", e.getMessage(), e);
 					}
 				}
 				return new TrpCreditPackageList(new ArrayList<>(), 0.0d, 0, 0, 0, null, null);
@@ -95,23 +90,5 @@ public class CreditPackagesCollectionPagedTableWidget extends CreditPackagesUser
 //			}
 //		});
 		createDefaultColumn(PACKAGE_ID_COL, 50, "packageId", true);
-	}
-	
-	protected void createOverallBalanceComposite(PageableTable pageableTable) {
-		// Create the composite in the bottom right of the table widget
-		Composite parent = pageableTable.getCompositeBottom();
-		int layoutColsIncrement = 2;
-		
-		//create Label to occupy space in the middle and push other stuff to the right
-		Label space = new Label(parent, SWT.NONE);
-		space.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, true));
-		
-		overallBalanceComp = new OverallBalanceComposite(parent, SWT.NONE);
-		overallBalanceComp.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, true));
-		
-		//adjust layout of bottom
-		GridLayout layout = (GridLayout) parent.getLayout();
-		layout.numColumns += layoutColsIncrement;
-		parent.pack();
 	}
 }

@@ -6967,7 +6967,7 @@ public class TrpMainWidget {
 		if (creditManagerDialog != null) {
 			creditManagerDialog.setVisible();
 		} else {
-			creditManagerDialog = new CreditManagerDialog(mw.getShell(), collection);
+			creditManagerDialog = new CreditManagerDialog(mw.getShell(), collection, storage.isAdminLoggedIn());
 			if (creditManagerDialog.open() == IDialogConstants.OK_ID) {
 				//we don't need feedback here. do nothing
 			}

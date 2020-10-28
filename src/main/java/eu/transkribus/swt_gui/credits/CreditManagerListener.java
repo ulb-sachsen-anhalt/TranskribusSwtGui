@@ -137,13 +137,6 @@ public class CreditManagerListener implements IStorageListener {
 		SWTUtil.onSelectionEvent(view.collectionCreditsTable.getShowDetailsButton(), (e) -> {
 			openPackageDetailsDialog(null, view.collectionCreditsTable.getCurrentBalance());
 		});
-		
-		if(view.userCreditsTable.getCreatePackageBtn() != null) {
-			//button is only there for admins
-			SWTUtil.onSelectionEvent(view.userCreditsTable.getCreatePackageBtn(), (e) -> {
-				openCreatePackageDialog();
-			});
-		}
 	}
 
 	private void assignPackagesToCollection(int collId, List<TrpCreditPackage> packageList) {
@@ -297,22 +290,6 @@ public class CreditManagerListener implements IStorageListener {
 			} catch (Throwable e) {
 				DialogUtil.showErrorMessageBox(view.getShell(), "Error", e.getMessage());
 				logger.error("Error in ProgressMonitorDialog", e);
-			}
-		}
-	}
-	
-	private void openCreatePackageDialog() {
-		CreateCreditPackageDialog d = new CreateCreditPackageDialog(view.getShell());
-		if(d.open() == IDialogConstants.OK_ID) {
-			TrpCreditPackage newPackage = d.getPackageToCreate();
-			try {
-				TrpCreditPackage createdPackage = store.getConnection().getCreditCalls().createCredit(newPackage);
-				DialogUtil.showInfoBalloonToolTip(view.userCreditsTable.getCreatePackageBtn(), 
-						"Done", "Package created: '" + createdPackage.getProduct().getLabel() + "'"
-								+ "\nOwner: " + createdPackage.getUserName());
-				view.userCreditsTable.refreshPage(false);
-			} catch (TrpServerErrorException | TrpClientErrorException | SessionExpiredException e1) {
-				DialogUtil.showErrorMessageBox2(view.getShell(), "Error", "Package could not be created.", e1);
 			}
 		}
 	}

@@ -20,6 +20,7 @@ import org.eclipse.swt.widgets.Shell;
 import eu.transkribus.core.model.beans.TrpCollection;
 import eu.transkribus.swt.util.Images;
 import eu.transkribus.swt.util.SWTUtil;
+import eu.transkribus.swt_gui.credits.admin.CreditAdminSashForm;
 import eu.transkribus.swt_gui.pagination_tables.CreditPackagesCollectionPagedTableWidget;
 import eu.transkribus.swt_gui.pagination_tables.CreditPackagesUserPagedTableWidget;
 import eu.transkribus.swt_gui.pagination_tables.CreditTransactionsPagedTableWidget;
@@ -35,6 +36,10 @@ public class CreditManagerDialog extends Dialog {
 	protected CTabItem collectionTabItem;
 	protected CTabItem jobTabItem;
 	
+	private boolean showAdminTab;
+	protected CTabItem adminTabItem;
+	private CreditAdminSashForm creditAdminWidget;
+	
 	private Composite collectionCreditWidget, jobTransactionWidget;
 	
 	protected CreditPackagesUserPagedTableWidget userCreditsTable;
@@ -47,8 +52,9 @@ public class CreditManagerDialog extends Dialog {
 	
 	protected Button addToCollectionBtn, removeFromCollectionBtn;
 
-	public CreditManagerDialog(Shell parent, TrpCollection collection) {
+	public CreditManagerDialog(Shell parent, TrpCollection collection, boolean showAdminTab) {
 		super(parent);
+		this.showAdminTab = showAdminTab;
 		this.collection = collection;
 	}
 	
@@ -87,12 +93,20 @@ public class CreditManagerDialog extends Dialog {
 		jobTabItem.setText("Transactions");
 		jobTabItem.setControl(jobTransactionWidget);
 
+		if(showAdminTab) {
+			adminTabItem = new CTabItem(tabFolder, SWT.NONE);
+			creditAdminWidget = new CreditAdminSashForm(tabFolder, SWT.NONE);
+			adminTabItem.setText("Admin");
+			adminTabItem.setControl(creditAdminWidget);
+		}
+		
 		tabFolder.setSelection(collectionTabItem);		
 		dialogArea.pack();
 		//init both tabs and not only the visible one. 
 		//not resetting the tables to first page initially will lead to messed up pagination display.
 		updateCreditsTabUI(true);
 		updateJobsTabUI(true);
+		creditAdminWidget.refresh(true);
 		new CreditManagerListener(this);
 		
 		return dialogArea;
@@ -177,9 +191,6 @@ public class CreditManagerDialog extends Dialog {
 		jobTransactionGroup.setText("Transactions of Job");
 		transactionsTable = new CreditTransactionsPagedTableWidget(jobTransactionGroup, SWT.NONE);
 		transactionsTable.setLayoutData(new GridData(GridData.FILL_BOTH));
-		
-		sf.setWeights(new int[] { 50, 50 });
-		
 		return sf;
 	}
 	

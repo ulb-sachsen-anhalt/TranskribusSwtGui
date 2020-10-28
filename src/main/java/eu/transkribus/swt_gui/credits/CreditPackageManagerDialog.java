@@ -1,5 +1,7 @@
 package eu.transkribus.swt_gui.credits;
 
+import java.text.DecimalFormat;
+
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
@@ -69,6 +71,7 @@ public class CreditPackageManagerDialog extends Dialog {
 
 		sliderComp = new TrpSliderComposite(splitPackageGrp, SWT.NONE);
 		sliderComp.setMaximum(creditPackage.getBalance());
+		sliderComp.setNumberFormat(new DecimalFormat("0.##"));
 		
 		Label splitNumPackagesLbl = new Label(splitPackageGrp, SWT.NONE);
 		splitNumPackagesLbl.setText("Nr. of Packages:");
