@@ -1,6 +1,7 @@
 package eu.transkribus.swt_gui.credits;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -98,6 +99,7 @@ public class CreditManagerDialog extends Dialog {
 			creditAdminWidget = new CreditAdminSashForm(tabFolder, SWT.NONE);
 			adminTabItem.setText("Admin");
 			adminTabItem.setControl(creditAdminWidget);
+			creditAdminWidget.refresh(true);
 		}
 		
 		tabFolder.setSelection(collectionTabItem);		
@@ -106,7 +108,6 @@ public class CreditManagerDialog extends Dialog {
 		//not resetting the tables to first page initially will lead to messed up pagination display.
 		updateCreditsTabUI(true);
 		updateJobsTabUI(true);
-		creditAdminWidget.refresh(true);
 		new CreditManagerListener(this);
 		
 		return dialogArea;
@@ -235,5 +236,11 @@ public class CreditManagerDialog extends Dialog {
 	@Override
 	protected void setShellStyle(int newShellStyle) {
 		super.setShellStyle(SWT.CLOSE | SWT.MAX | SWT.APPLICATION_MODAL | SWT.BORDER | SWT.TITLE | SWT.RESIZE);
+	}
+	
+	@Override
+	protected void createButtonsForButtonBar(Composite parent) {
+		//only show OK button (close dialog on press), labeled as close. defaultButton = false => hitting enter will not trigger close
+		createButton(parent, IDialogConstants.OK_ID, IDialogConstants.CLOSE_LABEL, false);
 	}
 }
