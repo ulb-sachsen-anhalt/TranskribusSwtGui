@@ -10,7 +10,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
 
 import eu.transkribus.client.util.SessionExpiredException;
 import eu.transkribus.core.model.beans.TrpCreditPackage;
@@ -22,9 +21,11 @@ import eu.transkribus.swt.util.Images;
 import eu.transkribus.swt_gui.mainwidget.TrpMainWidget;
 import eu.transkribus.swt_gui.mainwidget.storage.Storage;
 import eu.transkribus.swt_gui.pagination_tables.CreditPackagesUserPagedTableWidget;
-import eu.transkribus.swt_gui.pagination_tables.CreditPackagesUserPagedTableWidget.OverallBalanceComposite;
 
 public class CreditPackagesUserAdminPagedTableWidget extends CreditPackagesUserPagedTableWidget {
+	
+	public static final String PACKAGE_ORDER_ID_COL = "Shop Order ID";
+	
 	//Admin has option to create packages
 	Button createBtn;
 	//Admin can view packages of arbitrary userIDs
@@ -66,6 +67,12 @@ public class CreditPackagesUserAdminPagedTableWidget extends CreditPackagesUserP
 		GridLayout layout = (GridLayout) parent.getLayout();
 		layout.numColumns += layoutColsIncrement;
 		parent.pack();
+	}
+	
+	@Override
+	protected void createColumns() {
+		super.createColumns();
+		createDefaultColumn(PACKAGE_ORDER_ID_COL, 80, "orderId", true);
 	}
 	
 	@Override
