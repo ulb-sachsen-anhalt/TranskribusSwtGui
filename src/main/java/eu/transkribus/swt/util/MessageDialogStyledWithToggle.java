@@ -15,7 +15,7 @@ import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
@@ -44,9 +44,14 @@ public class MessageDialogStyledWithToggle extends MessageDialogWithToggle {
 		super(parentShell, dialogTitle, image, message, dialogImageType, dialogButtonLabels, defaultIndex, toggleMessage,
 				toggleState);
 	}
-
+	
 	@Override
-	protected Control createMessageArea(Composite composite) {
+	protected void setShellStyle(int newShellStyle) {
+		super.setShellStyle(newShellStyle | SWT.RESIZE);
+	}
+	
+	@Override
+	protected Control createMessageArea(Composite composite) {		
 		// default code from super class
 		// create composite
 		// create image
@@ -55,14 +60,13 @@ public class MessageDialogStyledWithToggle extends MessageDialogWithToggle {
 			imageLabel = new Label(composite, SWT.NULL);
 			image.setBackground(imageLabel.getBackground());
 			imageLabel.setImage(image);
-			GridDataFactory.fillDefaults().align(SWT.CENTER, SWT.BEGINNING)
+			GridDataFactory.fillDefaults().align(SWT.CENTER, SWT.BEGINNING).grab(false, false)
 					.applyTo(imageLabel);
 		}
 		// create message: custom code
 		// For now use StyledText and make only links clickable.
 		if (message != null) {			
-			StyledText area = new StyledText(composite, SWT.READ_ONLY | SWT.BORDER | super.getMessageLabelStyle());
-			area.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			StyledText area = new StyledText(composite, SWT.READ_ONLY | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP | super.getMessageLabelStyle());
 			final int margin = 5;
 			area.setMargins(margin, margin, margin, margin);
 			area.setEditable(false);
@@ -88,11 +92,18 @@ public class MessageDialogStyledWithToggle extends MessageDialogWithToggle {
 	                DesktopUtil.browse(url, null, this.getParentShell());
 	            }
 			});
-			GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, false)
-				.hint(convertHorizontalDLUsToPixels(IDialogConstants.MINIMUM_MESSAGE_AREA_WIDTH), SWT.DEFAULT)
+			GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true)
+				.hint(convertHorizontalDLUsToPixels(IDialogConstants.MINIMUM_MESSAGE_AREA_WIDTH), 300)
 				.applyTo(area);
 		}
 		return composite;
+	}
+	
+	@Override
+	protected Button createToggleButton(Composite parent) {
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false)
+				.applyTo(parent);
+		return super.createToggleButton(parent);
 	}
 
 	private StyleRange[] createStyleRanges(String string) {
