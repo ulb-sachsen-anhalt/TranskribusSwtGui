@@ -2,6 +2,7 @@ package eu.transkribus.swt_gui.htr;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
@@ -9,6 +10,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
 import eu.transkribus.core.model.beans.TrpHtr;
+import eu.transkribus.core.util.HtrPyLaiaUtils;
+import eu.transkribus.core.util.HtrUtils;
+import eu.transkribus.swt.util.DialogUtil;
 import eu.transkribus.swt.util.SWTUtil;
 
 public class HtrModelChooserButton extends Composite {
@@ -46,7 +50,22 @@ public class HtrModelChooserButton extends Composite {
 		SWTUtil.onSelectionEvent(baseModelBtn, (e) -> {
 			HtrModelsDialog diag = new HtrModelsDialog(getShell(), doubleClickSelectionEnabled, providerFilter);
 			if (diag.open() == Dialog.OK) {
-				setModel(diag.getSelectedHtr());
+				if (providerFilter.equals(HtrPyLaiaUtils.PROVIDER_PYLAIA)) {
+					int res = DialogUtil.showYesNoDialog(getShell(), "Do you really want to use a base model?",
+							"Training with base models for PyLaia requires the exact same character set.\n"
+							+ "Elsewise, the training will produce an error or a model that outputs only the characters from the base model and is unable to use a language model.\n"
+							+ "Only use base models if you are really sure that the training data contains the exact same characters as the base model."
+							);
+					if (res != SWT.YES) {
+						setModel(null);
+					}
+					else {
+						setModel(diag.getSelectedHtr());
+					}
+				}
+				else {
+					setModel(diag.getSelectedHtr());
+				}
 			}
 		});
 	}
