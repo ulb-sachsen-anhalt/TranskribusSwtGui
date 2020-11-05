@@ -189,9 +189,7 @@ public class CreditPackagesUserPagedTableWidget extends ATableWidgetPagination<T
 			if(balance != null) {
 				txt = "" + balance;
 			}
-
 			overallBalanceValueTxt.setText(txt);
-			overallBalanceValueTxt.pack();
 		}
 	}
 	
