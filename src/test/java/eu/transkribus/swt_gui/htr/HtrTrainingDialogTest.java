@@ -17,16 +17,11 @@ public class HtrTrainingDialogTest {
 	private static final Logger logger = LoggerFactory.getLogger(HtrTrainingDialogTest.class);
 	
 	public static void main(String[] args) {
-		if(args.length == 0) {
-			throw new IllegalArgumentException("No arguments.");
-		}
-		
-		boolean showGtData = true;
-		
-		boolean displayJsonDescriptorOnChange = false;
+
+		boolean displayJsonDescriptorOnChange = true;
 		
 //		final int colId = 2; //575 = CITlab GT collection
-		final int colId = 1; //575 = CITlab GT collection
+		final int colId = 2; //575 = CITlab GT collection
 		
 		boolean startTrainingOnServer=true;
 		

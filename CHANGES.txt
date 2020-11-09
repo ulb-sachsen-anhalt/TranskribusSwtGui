@@ -720,7 +720,8 @@ CHANGES AND BUGFIXES
 	-> User can set the size of the 'reading order circles' in the viewing settings
 	-> User management: take selected users over to another collection, roles are kept as they are and can be adapted in this other collection
 	-> Document manager: store older transcript versions as latest by choosing the status or toolname. Use-case example: store 'Ground Truth' versions as latest
-	-> Credit Manager Dialog: shows the data for the collection, selected in the table, not the actually loaded collection.
-	
-	
+	-> Credit Manager Dialog: misc. usability fixes. Now shows the data for the collection, selected in the collection table, not the actually loaded collection when opened.
+    -> HTR+ training: add option to skip lines with unclear and/or gap tags
+    -> Event message dialog: is resizable & allows scrolling
+
 	

@@ -1,5 +1,6 @@
 package eu.transkribus.swt_gui.pagination_tables;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.eclipse.swt.widgets.Text;
 import eu.transkribus.client.util.SessionExpiredException;
 import eu.transkribus.core.model.beans.TrpCreditPackage;
 import eu.transkribus.core.model.beans.rest.TrpCreditPackageList;
+import eu.transkribus.core.util.CoreUtils;
 import eu.transkribus.swt.pagination_table.ATableWidgetPagination;
 import eu.transkribus.swt.pagination_table.IPageLoadMethod;
 import eu.transkribus.swt.pagination_table.RemotePageLoaderSingleRequest;
@@ -30,6 +32,7 @@ import eu.transkribus.swt.util.Fonts;
 import eu.transkribus.swt.util.Images;
 import eu.transkribus.swt_gui.mainwidget.TrpMainWidget;
 import eu.transkribus.swt_gui.mainwidget.storage.Storage;
+import eu.transkribus.swt_gui.pagination_tables.CreditPackagesUserPagedTableWidget.PackageColumnLabelProvider;
 
 /**
  * Page loader will retrieve credit packages
@@ -47,6 +50,8 @@ public class CreditPackagesUserPagedTableWidget extends ATableWidgetPagination<T
 	public static final String PACKAGE_EXPIRATION_DATE_COL = "Expires";
 	public static final String PACKAGE_ID_COL = "ID";
 	
+	protected final DateFormat dateFormat;
+	
 	RemotePageLoaderSingleRequest<TrpCreditPackageList, TrpCreditPackage> pageLoader;
 	
 	protected OverallBalanceComposite overallBalanceComp;
@@ -54,7 +59,7 @@ public class CreditPackagesUserPagedTableWidget extends ATableWidgetPagination<T
 	public CreditPackagesUserPagedTableWidget(Composite parent, int style) {
 		super(parent, style, 25);
 		this.setLayout(new GridLayout(1, false));
-		
+		dateFormat = CoreUtils.newDateFormatUserFriendly();
 		createOverallBalanceComposite(pageableTable);
 	}
 
@@ -95,16 +100,24 @@ public class CreditPackagesUserPagedTableWidget extends ATableWidgetPagination<T
 
 	@Override
 	protected void createColumns() {
+		createColumns(false);
+	}
+
+	protected void createColumns(boolean showOwnerColumn) {
 		createColumn(PACKAGE_NAME_COL, 220, "label", new PackageColumnLabelProvider(p -> p.getProduct().getLabel()));
 		createColumn(PACKAGE_BALANCE_COL, 80, "balance", new PackageColumnLabelProvider(p -> "" + p.getBalance()));
-//		createDefaultColumn(PACKAGE_USER_NAME_COL, 120, "userName", new PackageColumnLabelProvider(p -> "" + p.getUserName()));
-		//for now we don't need the userid
-//		createDefaultColumn(PACKAGE_USER_ID_COL, 50, "userId", new PackageColumnLabelProvider(p -> "" + p.getUserId()));
+		if(showOwnerColumn) {
+			createColumn(PACKAGE_USER_NAME_COL, 120, "userName", new PackageColumnLabelProvider(p -> p.getUserName()));
+			//for now we don't need the userid
+//			createDefaultColumn(PACKAGE_USER_ID_COL, 50, "userId", new PackageColumnLabelProvider(p -> "" + p.getUserId()));
+		}
 		createColumn(PACKAGE_SHAREABLE_COL, 70, "shareable", new PackageColumnLabelProvider(p -> "" + p.getProduct().getShareable()));
-		createColumn(PACKAGE_DATE_COL, 120, "purchaseDate", new PackageColumnLabelProvider(p -> "" + p.getPurchaseDate()));
+		createColumn(PACKAGE_DATE_COL, 120, "purchaseDate", new PackageColumnLabelProvider(p -> dateFormat.format(p.getPurchaseDate())));
 		//hide credit type as the value is currently not used anyway
 //		createColumn(PACKAGE_TYPE_COL, 100, "creditType", new PackageColumnLabelProvider(p -> "" + p.getCreditType()));
-		createColumn(PACKAGE_EXPIRATION_DATE_COL, 120, "expirationDate", new PackageColumnLabelProvider(p -> "" + p.getExpirationDate()));
+		createColumn(PACKAGE_EXPIRATION_DATE_COL, 120, "expirationDate", new PackageColumnLabelProvider(
+				p -> p.getExpirationDate() == null ? "never" : dateFormat.format(p.getExpirationDate()))
+			);
 		createColumn(PACKAGE_ID_COL, 50, "packageId", new PackageColumnLabelProvider(p -> "" + p.getPackageId()));
 		ColumnViewerToolTipSupport.enableFor(super.getTableViewer());
 	}
@@ -176,9 +189,7 @@ public class CreditPackagesUserPagedTableWidget extends ATableWidgetPagination<T
 			if(balance != null) {
 				txt = "" + balance;
 			}
-
 			overallBalanceValueTxt.setText(txt);
-			overallBalanceValueTxt.pack();
 		}
 	}
 	

@@ -56,16 +56,6 @@ public class CreditPackagesCollectionPagedTableWidget extends CreditPackagesUser
 	
 	@Override
 	protected void createColumns() {
-		createColumn(PACKAGE_NAME_COL, 220, "label", new PackageColumnLabelProvider(p -> p.getProduct().getLabel()));
-		createColumn(PACKAGE_BALANCE_COL, 80, "balance", new PackageColumnLabelProvider(p -> "" + p.getBalance()));
-		createColumn(PACKAGE_USER_NAME_COL, 120, "userName", new PackageColumnLabelProvider(p -> p.getUserName()));
-		//for now we don't need the userid
-//		createDefaultColumn(PACKAGE_USER_ID_COL, 50, "userId", new PackageColumnLabelProvider(p -> "" + p.getUserId()));
-		createColumn(PACKAGE_SHAREABLE_COL, 70, "shareable", new PackageColumnLabelProvider(p -> "" + p.getProduct().getShareable()));
-		createColumn(PACKAGE_DATE_COL, 120, "purchaseDate", new PackageColumnLabelProvider(p -> "" + p.getPurchaseDate()));
-		//hide credit type as the value is currently not used anyway
-//		createColumn(PACKAGE_TYPE_COL, 100, "creditType", new PackageColumnLabelProvider(p -> "" + p.getCreditType()));
-		createColumn(PACKAGE_EXPIRATION_DATE_COL, 120, "expirationDate", new PackageColumnLabelProvider(p -> "" + p.getExpirationDate()));
-		createColumn(PACKAGE_ID_COL, 50, "packageId", new PackageColumnLabelProvider(p -> "" + p.getPackageId()));
+		createColumns(true);
 	}
 }

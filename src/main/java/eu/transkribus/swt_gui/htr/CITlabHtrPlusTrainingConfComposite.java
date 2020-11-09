@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import eu.transkribus.core.model.beans.CitLabHtrTrainConfig;
 import eu.transkribus.core.model.beans.TrpHtr;
+import eu.transkribus.core.rest.JobConst;
 import eu.transkribus.core.util.CoreUtils;
 import eu.transkribus.core.util.HtrCITlabUtils;
 
@@ -30,7 +31,8 @@ public class CITlabHtrPlusTrainingConfComposite extends Composite {
 //	private MultiCheckSelectionCombo langSelection;
 //	private Combo scriptType;
 	private HtrModelChooserButton baseModelBtn;
-	
+	private HtrTagsToIgnoreChooserComposite tagSelectionComp;
+		
 	public final static int DEFAULT_NUM_EPOCHS = 50;
 	public final static int MAX_NUM_EPOCHS = 1000;
 
@@ -72,6 +74,11 @@ public class CITlabHtrPlusTrainingConfComposite extends Composite {
 		} else {
 			baseModelBtn = null;
 		}
+		
+		Label omitLinesByTagLabel = new Label(this, SWT.NONE);
+		omitLinesByTagLabel.setText("Omit lines by tag:");
+		tagSelectionComp = new HtrTagsToIgnoreChooserComposite(this, SWT.NONE);
+		tagSelectionComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1));
 		
 //		Label scriptLbl = new Label(this, SWT.NONE);
 //		scriptLbl.setText("Script Type");
@@ -137,6 +144,7 @@ public class CITlabHtrPlusTrainingConfComposite extends Composite {
 		if(baseModelBtn != null) {
 			baseModelBtn.setModel(null);
 		}
+		tagSelectionComp.clearSelection();
 	}
 	
 	public List<String> validateParameters(List<String> errorList) {
@@ -181,6 +189,12 @@ public class CITlabHtrPlusTrainingConfComposite extends Composite {
 				logger.debug("No base HTR selected.");
 			}
 		}
+		
+		//as custom tags names may contain any character csv format is no option => set each value separately
+		citlabTrainConf.getCustomParams().addStringListParameter(
+				JobConst.PROP_HTR_OMIT_LINES_BY_TAG, tagSelectionComp.getSelectedTags());
+		
+		logger.debug("Train config = {}", citlabTrainConf);
 		return citlabTrainConf;
 	}
 
