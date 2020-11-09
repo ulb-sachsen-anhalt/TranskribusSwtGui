@@ -61,12 +61,14 @@ public class TextRecognitionComposite extends Composite {
 			@Override public void setModel(TrpHtr htr) {}
 		};
 		modelsBtn.setText("Models...");
-		modelsBtn.setImage(Images.getOrLoad("/icons/model2_16.png"));
+//		modelsBtn.setImage(Images.getOrLoad("/icons/model2_16.png"));
+		modelsBtn.setImage(Images.MODEL_ICON);
 		modelsBtn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
 		trainBtn = new Button(this, 0);
 		trainBtn.setText("Train..."); //α Train
 		trainBtn.setImage(Images.TRAIN);
+//		trainBtn.setImage(Images.MODEL_ADD_ICON);
 		trainBtn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
 		

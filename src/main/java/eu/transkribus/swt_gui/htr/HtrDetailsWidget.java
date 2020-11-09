@@ -46,6 +46,7 @@ import eu.transkribus.core.model.beans.ReleaseLevel;
 import eu.transkribus.core.model.beans.TextFeatsCfg;
 import eu.transkribus.core.model.beans.TrpDoc;
 import eu.transkribus.core.model.beans.TrpHtr;
+import eu.transkribus.core.model.beans.TrpPreprocPars;
 import eu.transkribus.core.model.beans.enums.DataSetType;
 import eu.transkribus.core.model.beans.enums.DocType;
 import eu.transkribus.core.util.CoreUtils;
@@ -559,10 +560,11 @@ public class HtrDetailsWidget extends SashForm {
 			
 			Properties paramsProps = htr.getParamsProps();
 			TextFeatsCfg textFeatsCfg = TextFeatsCfg.fromConfigString2(paramsProps.getProperty("textFeatsCfg"));
+			TrpPreprocPars trpPreprocPars = TrpPreprocPars.fromJson2(paramsProps.getProperty("trpPreprocPars"));
 			PyLaiaCreateModelPars createModelPars = PyLaiaCreateModelPars.fromSingleLineString2(paramsProps.getProperty("createModelPars"));
 			PyLaiaTrainCtcPars trainCtcPars = PyLaiaTrainCtcPars.fromSingleLineString2(paramsProps.getProperty("trainCtcPars"));
 			
-			PyLaiaAdvancedConfDialog d = new PyLaiaAdvancedConfDialog(getShell(), textFeatsCfg, createModelPars, trainCtcPars);
+			PyLaiaAdvancedConfDialog d = new PyLaiaAdvancedConfDialog(getShell(), textFeatsCfg, trpPreprocPars, createModelPars, trainCtcPars);
 			d.open();
 		});
 		
