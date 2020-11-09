@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import eu.transkribus.core.model.beans.PyLaiaCreateModelPars;
 import eu.transkribus.core.model.beans.PyLaiaTrainCtcPars;
 import eu.transkribus.core.model.beans.TextFeatsCfg;
+import eu.transkribus.core.model.beans.TrpPreprocPars;
 import eu.transkribus.swt.util.DialogUtil;
 import eu.transkribus.swt.util.SWTUtil;
 
@@ -24,15 +25,17 @@ public class PyLaiaAdvancedConfDialog extends Dialog {
 	
 	PyLaiaAdvancedConfComposite cfgComp;
 	TextFeatsCfg textFeatsCfg;
+	TrpPreprocPars trpPreprocPars;
 	PyLaiaCreateModelPars modelPars;
 	PyLaiaTrainCtcPars trainPars;	
 //	int batchSize = PyLaiaTrainCtcPars.DEFAULT_BATCH_SIZE;
 
-	public PyLaiaAdvancedConfDialog(Shell parentShell, /*int batchSize,*/ TextFeatsCfg textFeatsCfg, PyLaiaCreateModelPars modelPars, PyLaiaTrainCtcPars trainPars) {
+	public PyLaiaAdvancedConfDialog(Shell parentShell, /*int batchSize,*/ TextFeatsCfg textFeatsCfg, TrpPreprocPars trpPreprocPars, PyLaiaCreateModelPars modelPars, PyLaiaTrainCtcPars trainPars) {
 		super(parentShell);
 		
 //		this.batchSize = batchSize;
 		this.textFeatsCfg = textFeatsCfg;
+		this.trpPreprocPars = trpPreprocPars;
 		this.modelPars = modelPars;
 		this.trainPars = trainPars;
 	}
@@ -64,7 +67,7 @@ public class PyLaiaAdvancedConfDialog extends Dialog {
 	@Override
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
-		newShell.setText("PyLaia preprocessing configuration");
+		newShell.setText("PyLaia advanced parameters");
 	}
 	
 	@Override
@@ -72,7 +75,7 @@ public class PyLaiaAdvancedConfDialog extends Dialog {
 		Composite cont = (Composite) super.createDialogArea(parent);
 		cont.setLayout(new GridLayout(1, false));
 		
-		cfgComp = new PyLaiaAdvancedConfComposite(cont, /*batchSize,*/ textFeatsCfg, modelPars, trainPars);
+		cfgComp = new PyLaiaAdvancedConfComposite(cont, /*batchSize,*/ textFeatsCfg, trpPreprocPars, modelPars, trainPars);
 		cfgComp.setLayoutData(new GridData(GridData.FILL_BOTH));
 		
 		return cont;
@@ -81,12 +84,17 @@ public class PyLaiaAdvancedConfDialog extends Dialog {
 	private void storeConf() throws IOException {
 //		this.batchSize = cfgComp.getCurrentBatchSize();
 		this.textFeatsCfg = cfgComp.getTextFeatsCfg();
+		this.trpPreprocPars = cfgComp.getTrpPreprocPars();
 		this.modelPars = cfgComp.getCreateModelPars();
 		this.trainPars = cfgComp.getTrainCtcPars();
 	}
 	
 	public TextFeatsCfg getTextFeatsCfg() {
 		return textFeatsCfg;
+	}
+	
+	public TrpPreprocPars getTrpPreprocPars() {
+		return trpPreprocPars;
 	}
 	
 	public PyLaiaCreateModelPars getModelPars() {
@@ -106,7 +114,13 @@ public class PyLaiaAdvancedConfDialog extends Dialog {
 		try {
 			storeConf();
 //			logger.trace("ok pressed, batchsize = "+batchSize);
-			logger.trace("textFeatsCfg = "+textFeatsCfg.toSingleLineConfigString());
+			if (textFeatsCfg!=null) {
+				logger.debug("textFeatsCfg = "+textFeatsCfg.toSingleLineConfigString());	
+			}
+			if (trpPreprocPars != null) {
+				logger.debug("trpPreprocPars = "+trpPreprocPars.toJson());
+			}
+			
 			logger.trace("modelPars = "+modelPars.toSingleLineString());
 			logger.trace("trainPars = "+trainPars.toSingleLineString());
 			super.okPressed();

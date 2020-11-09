@@ -15,7 +15,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.slf4j.Logger;
@@ -26,7 +25,7 @@ import eu.transkribus.core.model.beans.PyLaiaHtrTrainConfig;
 import eu.transkribus.core.model.beans.PyLaiaTrainCtcPars;
 import eu.transkribus.core.model.beans.TextFeatsCfg;
 import eu.transkribus.core.model.beans.TrpHtr;
-import eu.transkribus.core.rest.JobConst;
+import eu.transkribus.core.model.beans.TrpPreprocPars;
 import eu.transkribus.core.util.CoreUtils;
 import eu.transkribus.core.util.HtrPyLaiaUtils;
 import eu.transkribus.swt.util.SWTUtil;
@@ -41,6 +40,7 @@ public class PyLaiaTrainingConfComposite extends Composite {
 	private Button advancedParsBtn;
 	
 	TextFeatsCfg textFeatsCfg = new TextFeatsCfg();
+	TrpPreprocPars trpPreprocPars = new TrpPreprocPars();
 	PyLaiaCreateModelPars createModelPars = PyLaiaCreateModelPars.getDefault();
 	PyLaiaTrainCtcPars trainCtcPars = PyLaiaTrainCtcPars.getDefault();
 //	int batchSize = PyLaiaTrainCtcPars.DEFAULT_BATCH_SIZE;
@@ -102,14 +102,21 @@ public class PyLaiaTrainingConfComposite extends Composite {
 		advancedParsBtn.setText("Advanced parameters...");
 		advancedParsBtn.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		SWTUtil.onSelectionEvent(advancedParsBtn, e -> {
-			PyLaiaAdvancedConfDialog d = new PyLaiaAdvancedConfDialog(getShell(), /*batchSize,*/ textFeatsCfg, createModelPars, trainCtcPars);
+			PyLaiaAdvancedConfDialog d = new PyLaiaAdvancedConfDialog(getShell(), /*batchSize,*/ textFeatsCfg, trpPreprocPars, createModelPars, trainCtcPars);
 			if (d.open() == IDialogConstants.OK_ID) {
 //				batchSize = d.getBatchSize();
 				textFeatsCfg = d.getTextFeatsCfg();
+				trpPreprocPars = d.getTrpPreprocPars();
 				createModelPars = d.getModelPars();
 				trainCtcPars = d.getTrainPars();
 //				logger.info("batch size = "+batchSize);
-				logger.info("preprocessing config = "+textFeatsCfg.toSingleLineConfigString());
+				if (textFeatsCfg != null) {
+					logger.info("preprocessing config (textFeats) = "+textFeatsCfg.toSingleLineConfigString());	
+				}
+				if (trpPreprocPars != null) {
+					logger.info("preprocessing config (trp) = "+trpPreprocPars.toJson());	
+				}
+				
 				logger.info("modelPars = "+createModelPars.toSingleLineString());
 				logger.info("trainPars = "+trainCtcPars.toSingleLineString());
 			}
@@ -204,7 +211,12 @@ public class PyLaiaTrainingConfComposite extends Composite {
 		conf.setProvider(this.getProvider());
 		
 		// important: set advanced preprocessing, model and train pars here, s.t. the "main" pars such as learning rate etc. can override those maybe set also in the advanced dialog... 
-		conf.setTextFeatsCfg(textFeatsCfg);
+		if (trpPreprocPars!=null) {
+			conf.setTrpPreprocPars(trpPreprocPars);
+		}
+		else if (textFeatsCfg != null) {
+			conf.setTextFeatsCfg(textFeatsCfg);	
+		}
 		conf.setCreateModelPars(createModelPars);
 		conf.setTrainCtcPars(trainCtcPars);
 		

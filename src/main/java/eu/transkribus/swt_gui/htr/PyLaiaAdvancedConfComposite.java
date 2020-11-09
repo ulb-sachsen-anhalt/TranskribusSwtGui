@@ -1,46 +1,39 @@
 package eu.transkribus.swt_gui.htr;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import eu.transkribus.core.model.beans.PyLaiaCreateModelPars;
 import eu.transkribus.core.model.beans.PyLaiaTrainCtcPars;
 import eu.transkribus.core.model.beans.TextFeatsCfg;
+import eu.transkribus.core.model.beans.TrpPreprocPars;
 import eu.transkribus.core.model.beans.rest.ParameterMap;
 import eu.transkribus.swt.util.Fonts;
-import eu.transkribus.swt.util.LabeledText;
 import eu.transkribus.swt.util.SWTUtil;
 
 public class PyLaiaAdvancedConfComposite extends Composite {
-//	int batchSize = PyLaiaTrainCtcPars.DEFAULT_BATCH_SIZE;
+	private static final Logger logger = LoggerFactory.getLogger(PyLaiaAdvancedConfComposite.class);
+	
+	TrpPreprocPars trpPreprocPars = new TrpPreprocPars();
 	TextFeatsCfg textFeatsCfg = new TextFeatsCfg();
 	PyLaiaCreateModelPars modelPars;
 	PyLaiaTrainCtcPars trainPars;
 	
-//	LabeledText batchSizeText;
+	CTabFolder preprocTf;
+	CTabItem textFeatsTi, trpPreprocTi;
+	PyLaiaTextFeatsComposite textFeatsComp;
+	PyLaiaTrpPreprocComposite trpPreprocComp;
 	
 	Group preprocGroup;
-	
-	Button deslopeCheck;
-	Button deslantCheck;
-	Button stretchCheck;
-	Button enhanceCheck;
-	LabeledText enhWinText;
-	LabeledText enhPrmText;
-	LabeledText normHeightText;
-	LabeledText normxHeightText;
-	Button momentnormCheck;
-	Button fpgramCheck;
-	Button fcontourCheck;
-	LabeledText fcontour_dilateText;
-	LabeledText paddingText;
-	LabeledText maxwidthText;
 	
 	Group modelParsGroup;
 	Text modelParsText;
@@ -48,11 +41,13 @@ public class PyLaiaAdvancedConfComposite extends Composite {
 	Group trainParsGroup;
 	Text trainParsText;
 	
-	public PyLaiaAdvancedConfComposite(Composite parent, /*int batchSize,*/ TextFeatsCfg textFeatsCfg, PyLaiaCreateModelPars modelPars, PyLaiaTrainCtcPars trainPars) {
+	public PyLaiaAdvancedConfComposite(Composite parent, /*int batchSize,*/ TextFeatsCfg textFeatsCfg, TrpPreprocPars trpPreprocPars, PyLaiaCreateModelPars modelPars, PyLaiaTrainCtcPars trainPars) {
 		super(parent, 0);
 
 //		this.batchSize = batchSize;
-		this.textFeatsCfg = textFeatsCfg == null ? new TextFeatsCfg() : textFeatsCfg;
+		this.trpPreprocPars = trpPreprocPars;
+		this.textFeatsCfg = textFeatsCfg;
+		
 		this.modelPars = modelPars == null ? PyLaiaCreateModelPars.getDefault() : modelPars;
 		this.trainPars = trainPars == null ? PyLaiaTrainCtcPars.getDefault() : trainPars;
 		
@@ -87,38 +82,25 @@ public class PyLaiaAdvancedConfComposite extends Composite {
 		createContent();
 	}
 	
-//	public int getCurrentBatchSize() throws IOException {
-//		try {
-//			batchSize = Integer.parseInt(batchSizeText.getText());
-//			if (batchSize <= 0 || batchSize>50) {
-//				throw new IOException("Batch size not in range 1-50");
-//			}
-//			return batchSize;
-//		} catch (NumberFormatException e) {
-//			throw new IOException("Not a valid batch size: "+batchSizeText.getText());
-//		}
-//	}
-	
 	public TextFeatsCfg getTextFeatsCfg() {
-		textFeatsCfg.setDeslope(deslopeCheck.getSelection());
-		textFeatsCfg.setDeslant(deslantCheck.getSelection());
-		textFeatsCfg.setStretch(stretchCheck.getSelection());
-		textFeatsCfg.setEnh(enhanceCheck.getSelection());
-		
-		textFeatsCfg.setEnh_win(enhWinText.toIntVal(textFeatsCfg.getEnh_win()));
-		textFeatsCfg.setEnh_prm(enhPrmText.toDoubleVal(textFeatsCfg.getEnh_prm()));
-		textFeatsCfg.setNormheight(normHeightText.toIntVal(textFeatsCfg.getNormheight()));
-		textFeatsCfg.setNormxheight(normxHeightText.toIntVal(textFeatsCfg.getNormxheight()));
-		
-		textFeatsCfg.setMomentnorm(momentnormCheck.getSelection());
-		textFeatsCfg.setFpgram(fpgramCheck.getSelection());
-		textFeatsCfg.setFcontour(fcontourCheck.getSelection());
-		
-		textFeatsCfg.setFcontour_dilate(fcontour_dilateText.toIntVal(textFeatsCfg.getFcontour_dilate()));
-		textFeatsCfg.setPadding(paddingText.toIntVal(textFeatsCfg.getPadding()));
-		textFeatsCfg.setMaxwidth(maxwidthText.toIntVal(textFeatsCfg.getMaxwidth()));
-		
+		if (preprocTf.getSelection() == textFeatsTi) {
+			this.textFeatsCfg = textFeatsComp.getTextFeatsCfg();
+		}
+		else {
+			this.textFeatsCfg = null;
+		}
 		return textFeatsCfg;
+	}
+	
+	public TrpPreprocPars getTrpPreprocPars() {
+		if (preprocTf.getSelection() == trpPreprocTi) {
+			this.trpPreprocPars = trpPreprocComp.getTrpPreprocPars();
+		}
+		else {
+			this.trpPreprocPars = null;
+			return null;
+		}
+		return trpPreprocPars;
 	}
 	
 	public PyLaiaCreateModelPars getCreateModelPars() {
@@ -143,23 +125,9 @@ public class PyLaiaAdvancedConfComposite extends Composite {
 	}
 	
 	private void updateUi() {
-//		batchSizeText.setText(""+batchSize);
-		
 		// preprocess pars:
-		deslopeCheck.setSelection(textFeatsCfg.isDeslope());
-		deslantCheck.setSelection(textFeatsCfg.isDeslant());
-		stretchCheck.setSelection(textFeatsCfg.isStretch());
-		enhanceCheck.setSelection(textFeatsCfg.isEnh());
-		enhWinText.setText(""+textFeatsCfg.getEnh_win());
-		enhPrmText.setText(""+textFeatsCfg.getEnh_prm());
-		normHeightText.setText(""+textFeatsCfg.getNormheight());
-		normxHeightText.setText(""+textFeatsCfg.getNormxheight());
-		momentnormCheck.setSelection(textFeatsCfg.isMomentnorm());
-		fpgramCheck.setSelection(textFeatsCfg.isFpgram());
-		fcontourCheck.setSelection(textFeatsCfg.isFcontour());
-		fcontour_dilateText.setText(""+textFeatsCfg.getFcontour_dilate());
-		paddingText.setText(""+textFeatsCfg.getPadding());
-		maxwidthText.setText(""+textFeatsCfg.getMaxwidth());
+		trpPreprocComp.updateUi();
+		textFeatsComp.updateUi();
 		
 		// model pars:
 		modelParsText.setText(modelPars.toSimpleStringLineByLine());
@@ -212,59 +180,29 @@ public class PyLaiaAdvancedConfComposite extends Composite {
 		Fonts.setBoldFont(preprocGroup);
 		preprocGroup.setText("Preprocessing");
 		preprocGroup.setLayout(new GridLayout(1, false));
-		preprocGroup.setLayoutData(new GridData(GridData.FILL_BOTH));
+		preprocGroup.setLayoutData(new GridData(GridData.FILL_BOTH));		
 		
-		deslopeCheck = new Button(preprocGroup, SWT.CHECK);
-		deslopeCheck.setText("Deslope");
-		deslopeCheck.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		preprocTf = new CTabFolder(preprocGroup, SWT.BORDER | SWT.FLAT);
+		preprocTf.setLayoutData(new GridData(GridData.FILL_BOTH));
 		
-		deslantCheck = new Button(preprocGroup, SWT.CHECK);
-		deslantCheck.setText("Deslant");
-		deslantCheck.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		trpPreprocTi = new CTabItem(preprocTf, 0);
+		trpPreprocTi.setText("TRP (new)");
+		trpPreprocComp = new PyLaiaTrpPreprocComposite(preprocTf, trpPreprocPars);
+		trpPreprocTi.setControl(trpPreprocComp);
 		
-		stretchCheck = new Button(preprocGroup, SWT.CHECK);
-		stretchCheck.setText("Stretch");
-		stretchCheck.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		textFeatsTi = new CTabItem(preprocTf, 0);
+		textFeatsTi.setText("TextFeats (old)");
+		textFeatsComp = new PyLaiaTextFeatsComposite(preprocTf, textFeatsCfg);
+		textFeatsTi.setControl(textFeatsComp);
 		
-		enhanceCheck = new Button(preprocGroup, SWT.CHECK);
-		enhanceCheck.setText("Enhance");
-		enhanceCheck.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		if (trpPreprocPars != null) {
+			preprocTf.setSelection(0);
+		}
+		else {
+			preprocTf.setSelection(1);	
+		}
 		
-		enhWinText = new LabeledText(preprocGroup, "Enhance window size: ");
-		enhWinText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		enhPrmText = new LabeledText(preprocGroup, "Sauvola enhancement parameter: ");
-		enhPrmText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		normHeightText = new LabeledText(preprocGroup, "Line height: ");
-		normHeightText.setToolTipText("Normalized height of extracted lines. Set to 0 for no normalization.");
-		normHeightText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		normxHeightText = new LabeledText(preprocGroup, "Line x-height: ");
-		normxHeightText.setToolTipText("Normalized x-height (= height - descender and cap height) of extracted lines. Set to 0 for no normalization.");
-		normxHeightText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		momentnormCheck = new Button(preprocGroup, SWT.CHECK);
-		momentnormCheck.setText("Moment normalization");
-		momentnormCheck.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		fpgramCheck = new Button(preprocGroup, SWT.CHECK);
-		fpgramCheck.setText("Features parallelogram");
-		fpgramCheck.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		fcontourCheck = new Button(preprocGroup, SWT.CHECK);
-		fcontourCheck.setText("Features surrounding polygon");
-		fcontourCheck.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		fcontour_dilateText = new LabeledText(preprocGroup, "Features surrounding polygon dilate: ");
-		fcontour_dilateText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		paddingText = new LabeledText(preprocGroup, "Left/right padding: ");
-		paddingText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		maxwidthText = new LabeledText(preprocGroup, "Max width: ");
-		maxwidthText.setToolTipText("Maximum width of the output line - warning: exceeding pixels are cut off on the right side!");
-		maxwidthText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));		
+		SWTUtil.setTabFolderBoldOnItemSelection(preprocTf);
 	}
 
 }
