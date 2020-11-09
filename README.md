@@ -1,6 +1,10 @@
 # TranskribusSwtGui
 SWT based GUI for the Transkribus platform
 
+## Installation and startup of the latest release
+
+[Installation-Wiki](https://gitlab.com/readcoop/transkribus/TranskribusSwtGui/-/wikis/Installation-and-Startup)
+
 [![Build Status](http://dbis-halvar.uibk.ac.at/jenkins/buildStatus/icon?job=TranskribusSwtGui)](http://dbis-halvar.uibk.ac.at/jenkins/job/TranskribusSwtGui)
 
 ## Building
