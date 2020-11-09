@@ -49,7 +49,7 @@ public class CollectionSelectorDialog extends Dialog {
 		super.configureShell(shell);
 		shell.setText("Choose a collection via double click");
 		shell.setSize(800, 650);
-		SWTUtil.centerShell(shell);
+		SWTUtil.centerShell(shell, false);
 	}
 	
 	@Override protected boolean isResizable() {
@@ -134,7 +134,7 @@ public class CollectionSelectorDialog extends Dialog {
 					TrpMainWidget.getInstance().openStrayDocsDialog();
 				}
 				else if (e.getSource() == openCreditManagerBtn) {
-					TrpMainWidget.getInstance().openCreditManager();
+					TrpMainWidget.getInstance().openCreditManager(c);
 				}
 			}
 		};

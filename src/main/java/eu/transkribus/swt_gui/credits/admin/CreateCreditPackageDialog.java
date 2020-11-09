@@ -1,4 +1,4 @@
-package eu.transkribus.swt_gui.credits;
+package eu.transkribus.swt_gui.credits.admin;
 
 import java.text.DecimalFormat;
 import java.util.List;
@@ -20,7 +20,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.TrpSliderComposite;
+import org.eclipse.swt.widgets.TrpNumberTextComposite;
 
 import eu.transkribus.core.model.beans.TrpCreditPackage;
 import eu.transkribus.core.model.beans.TrpCreditProduct;
@@ -44,18 +44,32 @@ public class CreateCreditPackageDialog extends Dialog {
 	
 	protected Composite newProductFormWidget;
 	protected Text labelTxt;
-	protected TrpSliderComposite nrOfCreditsSldr;
+	protected TrpNumberTextComposite nrOfCreditsTxt;
 	protected Button shareableChk;
 	
-	protected Text ownerTxt;
-	protected Button ownerBtn;
+	private final boolean showUserSearchBtn;
 	protected TrpUser selectedOwner;
+	
+	protected Text ownerTxt;
+	protected Button searchUserBtn;	
 	
 	//store final outcome here
 	private TrpCreditPackage packageToCreate;
 	
+	/**
+	 * Create dialog with current user as initial owner. Search button allows to find and set another package owner.
+	 */
 	public CreateCreditPackageDialog(Shell parent) {
+		this(parent, null);
+	}
+	
+	/**
+	 * Create dialog with given user as initial owner. Search button is not shown.
+	 */
+	public CreateCreditPackageDialog(Shell parent, TrpUser selectedOwner) {
 		super(parent);
+		this.showUserSearchBtn = selectedOwner == null;
+		this.selectedOwner = selectedOwner;
 	}
 
 	public void setVisible() {
@@ -87,30 +101,36 @@ public class CreateCreditPackageDialog extends Dialog {
 
 		Group pkgPropsGrp = new Group(dialogArea, SWT.BORDER);
 		pkgPropsGrp.setText("Credit Package Properties");
-		pkgPropsGrp.setLayoutData(new GridData(GridData.FILL_BOTH));
-		pkgPropsGrp.setLayout(new GridLayout(3, false));
+		pkgPropsGrp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
 		
 		Label ownerLbl = new Label(pkgPropsGrp, SWT.NONE);
-		ownerLbl.setText("Owner");
+		ownerLbl.setText("Owner:");
 		ownerTxt = new Text(pkgPropsGrp, SWT.BORDER | SWT.READ_ONLY);
+		ownerTxt.setEnabled(false);
 		ownerTxt.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		ownerBtn = new Button(pkgPropsGrp, SWT.PUSH);
-		ownerBtn.setImage(Images.FIND);
-		SWTUtil.onSelectionEvent(ownerBtn, (e) -> {
-			FindUserDialog fud = new FindUserDialog(CreateCreditPackageDialog.this.getShell());
-			if(fud.open() == IDialogConstants.OK_ID) {
-				List<TrpUser> selection = fud.getSelectedUsers();
-				if(!CollectionUtils.isEmpty(selection)) {
-					setOwner(selection.get(0));
-				}
-			}
-		});
 		
+		if(showUserSearchBtn) {
+			pkgPropsGrp.setLayout(new GridLayout(3, false));
+			searchUserBtn = new Button(pkgPropsGrp, SWT.PUSH);
+			searchUserBtn.setImage(Images.FIND);
+			SWTUtil.onSelectionEvent(searchUserBtn, (e) -> {
+				FindUserDialog fud = new FindUserDialog(CreateCreditPackageDialog.this.getShell());
+				if(fud.open() == IDialogConstants.OK_ID) {
+					List<TrpUser> selection = fud.getSelectedUsers();
+					if(!CollectionUtils.isEmpty(selection)) {
+						setOwner(selection.get(0));
+					}
+				}
+			});
+			//init owner field with logged-in user
+			setOwner(Storage.getInstance().getUser());
+		} else {
+			pkgPropsGrp.setLayout(new GridLayout(2, false));
+			setOwner(selectedOwner);
+		}
 		
 		tabFolder.setSelection(productsTableTabItem);
-		//init owner field with logged-in user
-		setOwner(Storage.getInstance().getUser());
-		
 		dialogArea.pack();
 		//init both tabs and not only the visible one. 
 		//not resetting the tables to first page initially will lead to messed up pagination display.
@@ -121,7 +141,7 @@ public class CreateCreditPackageDialog extends Dialog {
 	
 	private void setOwner(TrpUser trpUser) {
 		selectedOwner = trpUser;
-		ownerTxt.setText(trpUser.getUserName());		
+		ownerTxt.setText(selectedOwner.getUserName());
 	}
 
 	private Composite createNewProductFormWidget(Composite parent, int style) {
@@ -135,13 +155,14 @@ public class CreateCreditPackageDialog extends Dialog {
 		
 		Label nrOfCreditsLbl = new Label(c, SWT.NONE);
 		nrOfCreditsLbl.setText("Nr. of Credits:");
-		nrOfCreditsSldr = new TrpSliderComposite(c, SWT.NONE);
-		nrOfCreditsSldr.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		nrOfCreditsTxt = new TrpNumberTextComposite(c, SWT.NONE);
+		nrOfCreditsTxt.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		//do not show decimal places here and use intValue when getting it from the slider composite
-		nrOfCreditsSldr.setNumberFormat(new DecimalFormat("0"));
-		nrOfCreditsSldr.setValue(100);
-		nrOfCreditsSldr.setMaximum(10000);
+		nrOfCreditsTxt.setNumberFormat(new DecimalFormat("0"));
+		nrOfCreditsTxt.setValue(100);
+		nrOfCreditsTxt.setMaximum(1000000);
 		
+		new Label(c, SWT.NONE);
 		shareableChk = new Button(c, SWT.CHECK);
 		shareableChk.setText("Shareable");
 		
@@ -163,9 +184,9 @@ public class CreateCreditPackageDialog extends Dialog {
 			if(label == null || label.length() < 5) {
 				errorMsg += "Enter a label with at least 5 letters\n";
 			}
-			Double value = nrOfCreditsSldr.getValue();
+			Double value = nrOfCreditsTxt.getValue();
 			if(value == null || value <= 0.0) {
-				errorMsg += "Nr of credits must be positive\n";
+				errorMsg += "Nr of credits must be a positive number\n";
 			}
 			boolean shareable = shareableChk.getSelection();
 						

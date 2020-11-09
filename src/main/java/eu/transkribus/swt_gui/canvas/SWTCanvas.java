@@ -18,6 +18,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Cursor;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -78,7 +79,7 @@ public class SWTCanvas extends Canvas {
 	
 	protected StyledText readingOrderText;	
 	
-	protected CanvasSettings settings = new CanvasSettings();
+	protected static CanvasSettings settings = new CanvasSettings();
 	/**
 	 * A Scene object containing all objects to be drawn, including the main
 	 * image
@@ -1819,7 +1820,7 @@ public class SWTCanvas extends Canvas {
 	
 	private void drawReadingOrderForShape(GC gc, final ICanvasShape s) {
 				
-		CanvasSettings sets = getSettings();
+		//CanvasSettings sets = getSettings();
 		//draw reading order section
 		final ITrpShapeType trpShape = (ITrpShapeType) s.getData();
 		if (trpShape == null) // should not happen...
@@ -1851,39 +1852,41 @@ public class SWTCanvas extends Canvas {
 				|| (isWord && trpSets.isShowReadingOrderWords());
 
 		if (showRo) {
-			
-			//s.updateReadingOrderShapeWidth(sets.getReadingOrderCircleWidth());
 
 			gc.setAlpha(CanvasSettings.DEFAULT.getForegroundAlpha());
 			
 			int arcWidth;
-			if (s.getReadingOrderCircle() == null){
-				boolean hasBaseline = false;
-				double baselineY = -1;
-				double baselineX = -1;
-				if (trpShape.getChildren(false).size() > 0 && trpShape.getChildren(false).get(0) instanceof TrpBaselineType){
-					hasBaseline = true;
-					TrpBaselineType baseline = (TrpBaselineType) trpShape.getChildren(false).get(0);
-					if (baseline != null){
-						String coords1 = baseline.getCoordinates();
-						
-						List<java.awt.Point> pts1 = PointStrUtils.parsePoints(coords1);
-						
-						if (pts1.size() > 0){
-							baselineX = (int) pts1.get(0).getX();
-							baselineY = (int) pts1.get(0).getY();
-						}
+
+			boolean hasBaseline = false;
+			double baselineY = -1;
+			double baselineX = -1;
+			if (trpShape.getChildren(false).size() > 0 && trpShape.getChildren(false).get(0) instanceof TrpBaselineType){
+				hasBaseline = true;
+				TrpBaselineType baseline = (TrpBaselineType) trpShape.getChildren(false).get(0);
+				if (baseline != null){
+					String coords1 = baseline.getCoordinates();
+					
+					List<java.awt.Point> pts1 = PointStrUtils.parsePoints(coords1);
+					
+					if (pts1.size() > 0){
+						baselineX = (int) pts1.get(0).getX();
+						baselineY = (int) pts1.get(0).getY();
 					}
-					//logger.debug("baselineY" + baselineY);
 				}
-				s.createReadingOrderShape(this, isRegion, isLine, isWord, hasBaseline, baselineX, baselineY);
+				//logger.debug("baselineY" + baselineY);
 			}
-			
+			s.createReadingOrderShape(this, isRegion, isLine, isWord, hasBaseline, baselineX, baselineY);
+
 			arcWidth = (int) s.getReadingOrderCircle().getWidth();
+			//logger.debug("ro arc width: + " + arcWidth);
+			
+			//create the font for writing the ro numbers
+			//Font usedFont = settings.getFontTahomaWithSize((int) (arcWidth*.8));
+			Font usedFont = settings.createFont((int) (arcWidth*.6), true);
 						
 			gc.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_WHITE));
 			gc.setLineStyle(CanvasSettings.DEFAULT.getLineStyle());	
-			gc.setFont(sets.getFontTahoma16());
+			//gc.setFont(settings.getFontTahoma16());
 			
 			String roString2Show = "";
 			
@@ -1898,10 +1901,11 @@ public class SWTCanvas extends Canvas {
 				int yOffset = 0;
 								
 				if (isRegion){
-					//gc.setFont(sets.getFontTahoma50());
-					gc.setFont(sets.getFontTahomaWithSize(arcWidth));
+					gc.setFont(usedFont);
+
+					//gc.setFont(sets.getFontTahomaWithSize(arcWidth));
 					xOffset = arcWidth/5;
-					yOffset = arcWidth/5;
+					yOffset = arcWidth/10;
 //					if (readingOrder2Show>=0 && readingOrder2Show<10)
 //					{
 //						xOffset = 20;
@@ -1909,20 +1913,21 @@ public class SWTCanvas extends Canvas {
 
 				}
 				else if (isLine){
-					gc.setFont(sets.getFontTahoma30());
-					yOffset = 5;
+					//gc.setFont(sets.getFontTahoma30());
+					gc.setFont(usedFont);
+					yOffset = arcWidth/10;
 					if (readingOrder2Show>=0 && readingOrder2Show<10)
 					{
-						xOffset = 15;
+						xOffset = arcWidth/5;
 					}
 				}
 				else if (isWord){
-					gc.setFont(sets.getFontTahoma22());
-					yOffset = 5;
-					xOffset = 5;
+					gc.setFont(usedFont);
+					yOffset = arcWidth/10;
+					xOffset = arcWidth/10;
 					if (readingOrder2Show>=0 && readingOrder2Show<10)
 					{
-						xOffset = 15;
+						xOffset = arcWidth/5;
 					}
 				}
 				
@@ -1933,6 +1938,8 @@ public class SWTCanvas extends Canvas {
 					//if width changes we must correct the y starting point too
 					int yCorrection = 0;
 					if (arcWidth < gc.getFontMetrics().getHeight()){
+						logger.debug("arcWidth changes: " + gc.getFontMetrics().getHeight());
+						logger.debug("arc width: " + arcWidth);
 						int oldArcWidth = arcWidth;
 						arcWidth = gc.getFontMetrics().getHeight();
 						s.updateReadingOrderShapeWidth(arcWidth);

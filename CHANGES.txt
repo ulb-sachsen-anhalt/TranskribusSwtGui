@@ -709,8 +709,18 @@ CHANGES AND BUGFIXES
 	-> Undo a job (see the 'Jobs Overview': 'Undo button' will be enabled if the docID of the job corresponds to the ID of the currently loaded document)
 	-> Documents moved to the recycle bin are automatically discarded after two weeks
 	-> New cool feature ;) can be found here: 'Canvas tool bar' - 'Other segmentation tools' - 'Copy shapes to other pages': after the user has drawn tables or text regions he wants to copy this table/text regions for all the other pages as well because they look pretty much the same
-	-> And another one: same same but different: 'Canvas tool bar' - 'Other segmentation tools' - 'Remove small text lines': deletes lines which are very small in relation to their region - needs to be checked afterwards
+	-> And another one: same same but different: 'Canvas tool bar' - 'Other segmentation tools' - 'Remove small text lines': deletes lines which are very small in relation to their region - needs to be used carefully and checked afterwards
 	-> Last but not least in this series: 'Canvas tool bar' - 'Other segmentation tools' - 'Merge small text lines': automatically merges small text lines in the same row (should be used carefully)
 	-> Editorial Declaration: export your selected transcription options directly in the 'Editorial Declaration Dialog' into XLSX
+	-> automatic split of training set and validation set (choose if you want 2%, 5% or 10% of validation pages)
+	-> bugfix: handwritten text recognition restriction on selected structures had no effect
+	-> first integration of Document Understanding with a fixed model 
+	
+1.13.0:
+	-> User can set the size of the 'reading order circles' in the viewing settings
+	-> User management: take selected users over to another collection, roles are kept as they are and can be adapted in this other collection
+	-> Document manager: store older transcript versions as latest by choosing the status or toolname. Use-case example: store 'Ground Truth' versions as latest
+	-> Credit Manager Dialog: shows the data for the collection, selected in the table, not the actually loaded collection.
+	
 	
 	

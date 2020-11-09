@@ -66,12 +66,12 @@ public class CreditManagerListener implements IStorageListener {
 		SWTUtil.setTabFolderBoldOnItemSelection(view.tabFolder);
 		SWTUtil.onSelectionEvent(view.addToCollectionBtn, (e) -> {
 			List<TrpCreditPackage> packageList = view.userCreditsTable.getSelected();
-			assignPackagesToCollection(store.getCollId(), packageList);
+			assignPackagesToCollection(view.getCollection().getColId(), packageList);
 		});
 		
 		SWTUtil.onSelectionEvent(view.removeFromCollectionBtn, (e) -> {
 			List<TrpCreditPackage> packageList = view.collectionCreditsTable.getSelected();
-			removePackagesFromCollection(store.getCollId(), packageList);
+			removePackagesFromCollection(view.getCollection().getColId(), packageList);
 		});
 		
 		//register as storage listener for handling collection changes (DocListLoadEvent). Deregister on dialog close.
@@ -137,13 +137,6 @@ public class CreditManagerListener implements IStorageListener {
 		SWTUtil.onSelectionEvent(view.collectionCreditsTable.getShowDetailsButton(), (e) -> {
 			openPackageDetailsDialog(null, view.collectionCreditsTable.getCurrentBalance());
 		});
-		
-		if(view.userCreditsTable.getCreatePackageBtn() != null) {
-			//button is only there for admins
-			SWTUtil.onSelectionEvent(view.userCreditsTable.getCreatePackageBtn(), (e) -> {
-				openCreatePackageDialog();
-			});
-		}
 	}
 
 	private void assignPackagesToCollection(int collId, List<TrpCreditPackage> packageList) {
@@ -164,7 +157,7 @@ public class CreditManagerListener implements IStorageListener {
 				continue;
 			}
 			try {
-				store.getConnection().getCreditCalls().addCreditPackageToCollection(store.getCollId(), p.getPackageId());
+				store.getConnection().getCreditCalls().addCreditPackageToCollection(view.getCollection().getColId(), p.getPackageId());
 				addCount++;
 			} catch (IllegalStateException ise) {
 				//Client currently maps "304 - Not modified" to an IllegalStateException. The package was already assigned to this collection.
@@ -206,7 +199,7 @@ public class CreditManagerListener implements IStorageListener {
 		final Set<String> fails = new HashSet<>();
 		for(TrpCreditPackage p : packageList) {
 			try {
-				store.getConnection().getCreditCalls().removeCreditPackageFromCollection(store.getCollId(), p.getPackageId());
+				store.getConnection().getCreditCalls().removeCreditPackageFromCollection(view.getCollection().getColId(), p.getPackageId());
 				addCount++;
 			} catch (SessionExpiredException e1) {
 				//TODO abort and show login dialog
@@ -297,22 +290,6 @@ public class CreditManagerListener implements IStorageListener {
 			} catch (Throwable e) {
 				DialogUtil.showErrorMessageBox(view.getShell(), "Error", e.getMessage());
 				logger.error("Error in ProgressMonitorDialog", e);
-			}
-		}
-	}
-	
-	private void openCreatePackageDialog() {
-		CreateCreditPackageDialog d = new CreateCreditPackageDialog(view.getShell());
-		if(d.open() == IDialogConstants.OK_ID) {
-			TrpCreditPackage newPackage = d.getPackageToCreate();
-			try {
-				TrpCreditPackage createdPackage = store.getConnection().getCreditCalls().createCredit(newPackage);
-				DialogUtil.showInfoBalloonToolTip(view.userCreditsTable.getCreatePackageBtn(), 
-						"Done", "Package created: '" + createdPackage.getProduct().getLabel() + "'"
-								+ "\nOwner: " + createdPackage.getUserName());
-				view.userCreditsTable.refreshPage(false);
-			} catch (TrpServerErrorException | TrpClientErrorException | SessionExpiredException e1) {
-				DialogUtil.showErrorMessageBox2(view.getShell(), "Error", "Package could not be created.", e1);
 			}
 		}
 	}

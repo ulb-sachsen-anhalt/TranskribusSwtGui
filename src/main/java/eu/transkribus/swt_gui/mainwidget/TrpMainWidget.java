@@ -53,6 +53,7 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.util.BidiUtils;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -158,6 +159,7 @@ import eu.transkribus.swt.util.DocumentManager;
 import eu.transkribus.swt.util.Fonts;
 import eu.transkribus.swt.util.Images;
 import eu.transkribus.swt.util.LoginDialog;
+import eu.transkribus.swt.util.MessageDialogStyledWithToggle;
 import eu.transkribus.swt.util.SWTLog;
 import eu.transkribus.swt.util.SWTUtil;
 import eu.transkribus.swt.util.SplashWindow;
@@ -2153,19 +2155,20 @@ public class TrpMainWidget {
 			return;
 		}
 		double initWidth = readingOrderCircleInitWidth;
-		logger.debug("initWidth " + initWidth);
+		logger.debug("initWidth ro size " + initWidth);
 		
 		double resizeFactor = 1.0;
 		if (imgMd.getxResolution() < 210){
 			resizeFactor = 0.5;
 		}
 		else if(imgMd.getxResolution() > 210 && imgMd.getxResolution() < 390){
-			resizeFactor = 0.75;
+			resizeFactor = 1.0;
 		}
 		double tmpWith = initWidth*resizeFactor;
 		logger.debug("set ro in settings " + tmpWith);
 		
-		canvas.getSettings().setReadingOrderCircleWidth((int) tmpWith);
+		//let the valie in the settings as it is
+		//canvas.getSettings().setReadingOrderCircleWidth((int) tmpWith);
 	}
 
 	public void updateTreeSelectionFromCanvas() {
@@ -2788,7 +2791,11 @@ public class TrpMainWidget {
 					autoSaveController.checkForNewerAutoSavedPage(storage.getPage());
 				}
 				getCanvas().fitWidth();
-				adjustReadingOrderDisplayToImageSize();				
+				/*
+				 * this way we could automatically adjust the ro circle to the image dimensions
+				 * but then the settings get overwritten; better keep user settings
+				 */
+				//adjustReadingOrderDisplayToImageSize();				
 			}, null);
 //			if (getTrpSets().getAutoSaveEnabled() && getTrpSets().isCheckForNewerAutosaveFile()) {
 //				autoSaveController.checkForNewerAutoSavedPage(storage.getPage());
@@ -2859,7 +2866,7 @@ public class TrpMainWidget {
 			}, "Loading document from server", false);
 			reloadCurrentPage(true, true, CanvasAutoZoomMode.FIT_WIDTH, () -> {
 				getCanvas().fitWidth();
-				adjustReadingOrderDisplayToImageSize();
+				//adjustReadingOrderDisplayToImageSize();
 			}, null);
 			clearThumbs();
 //			getCanvas().fitWidth();
@@ -3509,13 +3516,13 @@ public class TrpMainWidget {
 		return extArr;
 	}
 	
-	public void addSeveralPages2Doc() {
+	public boolean addSeveralPages2Doc() {
 		logger.debug("Open Dialog for adding images");
 
 		final String[] extArr = getAllowedFilenameExtensions();
 		final ArrayList<String> imgNames = DialogUtil.showOpenFilesDialog(getShell(), "Select image files to add", null, extArr);
 		if (imgNames == null)
-			return;
+			return false;
 
 		try {
 			int pageNr = storage.getNPages();
@@ -3530,11 +3537,12 @@ public class TrpMainWidget {
 				
 				if (docId == -2){
 					DialogUtil.showInfoMessageBox(mw.getShell(), "No document loaded", "Page(s) can not be added - there is no remote document loaded");
-					return;
+					return false;
 				}
 				
-				if (!imgFile.canRead())
+				if (!imgFile.canRead()) {
 					throw new Exception("Can't read file at: " + img);
+				}
 				
 				ProgressBarDialog.open(mw.getShell(), new IRunnableWithProgress(){
 
@@ -3559,7 +3567,8 @@ public class TrpMainWidget {
 		} catch (Throwable e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}	
+		}
+		return true;	
 	}
 
 	public void deletePage() {
@@ -4876,9 +4885,11 @@ public class TrpMainWidget {
 			List<TrpEvent> events = storage.getEvents();
 			for (TrpEvent ev : events) {
 				final String msg = CoreUtils.newDateFormatUserFriendly().format(ev.getDate()) + ": " + ev.getTitle() + "\n\n" + ev.getMessage();
-				Pair<Integer, Boolean> ret = DialogUtil.showMessageDialogWithToggle(getShell(), "Notification", msg, "Do not show this message again", false,
-						SWT.NONE, "OK");
-				boolean doNotShowAgain = ret.getRight();
+				MessageDialogWithToggle eventDialog = new MessageDialogStyledWithToggle(getShell(), "Notification", null, msg, MessageDialog.INFORMATION, 
+						new String[] { "OK" }, 0, "Do not show this message again", false);
+				int ret = eventDialog.open();
+				logger.debug("User choice was button: {}", ret);
+				boolean doNotShowAgain = eventDialog.getToggleState();
 				logger.debug("Do not show again = " + doNotShowAgain);
 				if (doNotShowAgain) {
 					storage.markEventAsRead(ev.getId());
@@ -6316,12 +6327,17 @@ public class TrpMainWidget {
 		
 	}
 
-	public void changeVersionStatus(String text, List<TrpPage> pageList) {
+	public boolean changeVersionStatus(String text, List<TrpPage> pageList) {
+		
+		int r = DialogUtil.showYesNoCancelDialog(getShell(), "Change status of pages", "Do you want to update the status of the selected pages of this document with the chosen status: " + text);
+		if (r != SWT.YES) {
+			return false;
+		}
 		
 		if (EditStatus.fromString(text).equals(EditStatus.NEW)){
 			//New is only allowed for the first transcript
 			DialogUtil.showInfoMessageBox(getShell(), "Status 'New' reserved for first transcript", "Only the first transcript can be 'New', all others must be at least 'InProgress'");
-			return;
+			return false;
 		}
 		
 		Storage storage = Storage.getInstance();
@@ -6399,6 +6415,130 @@ public class TrpMainWidget {
 				updateVersionStatus();
 			}
 		}
+		return true;
+
+	}
+	
+	public boolean setVersionsAsLatest(String text, List<TrpPage> pageList) {
+		
+
+		int r = DialogUtil.showYesNoCancelDialog(getShell(), "Save versions as latest", "Do you want to store all transcript versions with the chosen status or toolname '" + text + "' of this document as the latest versions?");
+		if (r != SWT.YES) {
+			return false;
+		}
+		
+		Storage storage = Storage.getInstance();
+		
+		int colId = Storage.getInstance().getCollId();
+		if (!pageList.isEmpty()) {
+			List<String> msgsNotFound = new ArrayList<String>();
+			List<String> msgsIsLatest = new ArrayList<String>();
+			try {
+				ProgressBarDialog.open(getShell(), new IRunnableWithProgress() {
+					@Override public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+							try{
+
+								monitor.beginTask("Store versions with status or toolname "+text+" as latest.", pageList.size());
+								int c=0;
+								
+								for (TrpPage page : pageList) {
+									
+									if (monitor.isCanceled()){
+										storage.reloadDocWithAllTranscripts();
+										return;
+									}
+
+									int pageNr = page.getPageNr();
+									int docId = page.getDocId();
+									
+									TrpTranscriptMetadata transcript = null;
+									if ((pageNr - 1) >= 0) {
+										transcript = page.getTranscriptWithStatusOrNull(text);
+										if (transcript == null){
+											logger.debug("For page " + page.getPageNr() + " the transcript was not found" + System.lineSeparator());
+											if (msgsNotFound.isEmpty()) {
+												msgsNotFound.add(""+ page.getPageNr()); 
+											}
+											else {
+												msgsNotFound.add(", " + page.getPageNr());
+											}
+											
+											continue;
+										}
+										
+										if (page.getCurrentTranscript().equals(transcript)) {
+											logger.debug("For page " + page.getPageNr() + " the transcript with this status/toolname is already the latest" + System.lineSeparator());
+											//Todo: show user message dialog with this info
+											if (msgsIsLatest.isEmpty()) {
+												msgsIsLatest.add(""+ page.getPageNr()); 
+											}
+											else {
+												msgsIsLatest.add(", " + page.getPageNr());
+											}
+											continue;
+										}
+											
+									}
+									
+									storage.getConnection().updateTranscript(colId, docId, pageNr, transcript.getStatus(), transcript.unmarshallTranscript(), transcript.getParentTsId(), transcript.getToolName());
+									
+									monitor.subTask("Page " + ++c + "/" + pageList.size() );
+									monitor.worked(c);
+																	
+								}
+								
+								storage.reloadDocWithAllTranscripts();
+								
+							} catch (SessionExpiredException | ServerErrorException | ClientErrorException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (IllegalArgumentException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+//							} catch (NoConnectionException e) {
+//								// TODO Auto-generated catch block
+//								e.printStackTrace();
+							} catch (Exception e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+
+					}
+				}, "Storing transcripts as latest", true);
+			} catch (Throwable e) {
+				TrpMainWidget.getInstance().onError("Error storing transcripts as latest", e.getMessage(), e, true, false);
+			}
+			finally{
+				for (TrpPage page : pageList) {
+					//reload the page in the GUI if status has changed
+					if (page.getPageId() == Storage.getInstance().getPage().getPageId()) {
+						reloadCurrentPage(true, null, null);
+						break;
+					}
+				}
+				updateVersionStatus();
+			}
+			if (!msgsNotFound.isEmpty() || !msgsIsLatest.isEmpty()) {
+				String pageString1 = "";
+				String pageString2 = "";
+				
+				for (String msgNotFound : msgsNotFound) {
+					pageString1 += msgNotFound;
+				}
+				for (String msgIsLatest : msgsIsLatest) {
+					pageString2 += msgIsLatest;
+				}
+				String info1 = "For following pages there is no transcript with the chosen status/toolname' " + text + "': " + pageString1 + System.lineSeparator();
+				String info2 = "For following pages the transcript with the chosen status/toolname '" + text + "' is already the latest: " + pageString2 + System.lineSeparator();
+				DialogUtil.showInfoMessageBox(getShell(), "Summary of storing transcripts as latest", info2+info1);
+			}
+			return true;
+		}
+			
+		else {
+			return false;
+		}
+		
 
 	}
 	
@@ -6529,7 +6669,7 @@ public class TrpMainWidget {
 						autoSaveController.checkForNewerAutoSavedPage(storage.getPage());
 					}
 					getCanvas().fitWidth();
-					adjustReadingOrderDisplayToImageSize();				
+					//adjustReadingOrderDisplayToImageSize();				
 				}, null);
 
 			} catch (SessionExpiredException | ClientErrorException | IllegalArgumentException e) {
@@ -6668,10 +6808,9 @@ public class TrpMainWidget {
 		ArrayList<String> refText = new ArrayList<String>();
 		ArrayList<String> hypText = new ArrayList<String>();
 
-		TrpPageType refPage = (TrpPageType) ref.unmarshallTranscript().getPage();
-		TrpPageType hypPage = (TrpPageType) hyp.unmarshallTranscript().getPage();
-
 		if (ref != null && hyp != null) {
+			TrpPageType refPage = (TrpPageType) ref.unmarshallTranscript().getPage();
+			TrpPageType hypPage = (TrpPageType) hyp.unmarshallTranscript().getPage();			
 			
 			int i = 1;
 			int j = 1;
@@ -6824,11 +6963,11 @@ public class TrpMainWidget {
 		return rids;
 	}
 	
-	public void openCreditManager() {
+	public void openCreditManager(TrpCollection collection) {
 		if (creditManagerDialog != null) {
 			creditManagerDialog.setVisible();
 		} else {
-			creditManagerDialog = new CreditManagerDialog(mw.getShell());
+			creditManagerDialog = new CreditManagerDialog(mw.getShell(), collection, storage.isAdminLoggedIn());
 			if (creditManagerDialog.open() == IDialogConstants.OK_ID) {
 				//we don't need feedback here. do nothing
 			}

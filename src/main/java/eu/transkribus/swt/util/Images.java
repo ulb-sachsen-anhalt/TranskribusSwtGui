@@ -135,6 +135,7 @@ public class Images {
 	public static final Image ERROR = Images.getOrLoad("/icons/error.png");
 	
 	public static final Image MODEL_ICON = Images.getOrLoad("/icons/chart_line_reversed.png");
+	public static final Image MODEL_ADD_ICON = Images.getOrLoad("/icons/chart_line_add.png");
 	public static final Image MODEL_SHARED_ICON = Images.getOrLoad("/icons/chart_line_reversed_world.png");
 	
 	public static final Image COINS_ICON = Images.getOrLoad("/icons/coins.png");	

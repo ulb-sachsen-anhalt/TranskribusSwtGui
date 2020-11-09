@@ -4,7 +4,7 @@
 	<groupId>eu.transkribus</groupId>
 	<artifactId>TranskribusSwtGui</artifactId>
 	<packaging>jar</packaging>
-	<version>1.12.0.7-SNAPSHOT</version>
+	<version>1.13.0.1-SNAPSHOT</version>
 	<name>Transkribus</name>
 
 	<properties>
@@ -29,7 +29,7 @@
 		<swt.groupId>org.eclipse.swt</swt.groupId>
 <!-- 		<swt.version>4.7.1</swt.version> -->
 <!-- 		<swt.version>4.9</swt.version> -->
-		<swt.version>4.17</swt.version>
+		<swt.version>4.14</swt.version>
 
 <!-- 		<jface.groupId>org.eclipse.ui</jface.groupId> -->
 <!-- 		<jface.version>3.7.1.v20120104-1859</jface.version> -->
@@ -799,7 +799,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.8.1</version>
+			<version>4.13.1</version>
 		</dependency>
 
 		<dependency>
