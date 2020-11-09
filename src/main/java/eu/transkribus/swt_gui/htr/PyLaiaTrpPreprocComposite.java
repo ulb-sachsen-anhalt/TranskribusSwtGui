@@ -11,6 +11,7 @@ import eu.transkribus.core.model.beans.TrpPreprocPars;
 import eu.transkribus.swt.util.LabeledCombo;
 import eu.transkribus.swt.util.LabeledText;
 import eu.transkribus.swt.util.SWTUtil;
+import eu.transkribus.swt_gui.mainwidget.storage.Storage;
 
 public class PyLaiaTrpPreprocComposite extends Composite {
 	TrpPreprocPars trpPreprocPars = new TrpPreprocPars();
@@ -21,7 +22,7 @@ public class PyLaiaTrpPreprocComposite extends Composite {
 	LabeledText lineHeightText;
 	LabeledText paddingText;
 	LabeledText scalingFactorText;
-
+	
 	public PyLaiaTrpPreprocComposite(Composite parent, TrpPreprocPars trpPreprocPars) {
 		super(parent, 0);
 		this.setLayout(new GridLayout(1, false));
@@ -34,10 +35,11 @@ public class PyLaiaTrpPreprocComposite extends Composite {
 		dewarpMethodCombo.setItems(new String[] {"dewarp", "rotate", "none"});
 		dewarpMethodCombo.getCombo().select(0);
 		dewarpMethodCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		dewarpMethodCombo.setToolTipText("Correction method for non-horizontal lines.\nDewarp - if (some) input lines are curved\nRotate - if input lines are just rotated by some degree but elsewise straight\nNone - if input lines are all perfectly horizontal");
 		
 		deleteBackgroundCheck = new Button(this, SWT.CHECK);
 		deleteBackgroundCheck.setText("Delete background");
-		deleteBackgroundCheck.setToolTipText("Remove the background from the line polygon?\nUsually not needed if binarization is done!");
+		deleteBackgroundCheck.setToolTipText("Remove the background of the line polygon?");
 		deleteBackgroundCheck.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		doSauvolaCheck = new Button(this, SWT.CHECK);
@@ -51,10 +53,16 @@ public class PyLaiaTrpPreprocComposite extends Composite {
 		
 		paddingText = new LabeledText(this, "Left/right padding: ");
 		paddingText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
+			
 		scalingFactorText = new LabeledText(this, "Scaling factor: ");
 		scalingFactorText.setToolTipText("Scaling factor - determines quality and size of line images.\nThe higher the value, the slower the preprocessing\n0.5 is usually good enough!");
 		scalingFactorText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		// hide some more advanced parameters from non-admins
+		if (Storage.getInstance()!=null && !Storage.getInstance().isAdminLoggedIn()) {
+			paddingText.setVisible(false);
+			scalingFactorText.setVisible(false);
+		}
 	}
 
 	public TrpPreprocPars getTrpPreprocPars() {
@@ -62,8 +70,12 @@ public class PyLaiaTrpPreprocComposite extends Composite {
 		trpPreprocPars.setDelete_background(deleteBackgroundCheck.getSelection());
 		trpPreprocPars.setDo_sauvola(doSauvolaCheck.getSelection());
 		trpPreprocPars.setLine_height(lineHeightText.toIntVal(trpPreprocPars.getLine_height()));
-		trpPreprocPars.setPadding(paddingText.toIntVal(trpPreprocPars.getPadding()));
-		trpPreprocPars.setScaling_factor((float) scalingFactorText.toDoubleVal(trpPreprocPars.getScaling_factor()));
+		if (paddingText != null) {
+			trpPreprocPars.setPadding(paddingText.toIntVal(trpPreprocPars.getPadding()));	
+		}
+		if (scalingFactorText != null) {
+			trpPreprocPars.setScaling_factor((float) scalingFactorText.toDoubleVal(trpPreprocPars.getScaling_factor()));	
+		}
 		
 		return trpPreprocPars;
 	}
@@ -82,8 +94,12 @@ public class PyLaiaTrpPreprocComposite extends Composite {
 		deleteBackgroundCheck.setSelection(trpPreprocPars.isDelete_background());
 		doSauvolaCheck.setSelection(trpPreprocPars.isDo_sauvola());
 		lineHeightText.setText(""+trpPreprocPars.getLine_height());
-		paddingText.setText(""+trpPreprocPars.getPadding());
-		scalingFactorText.setText(""+trpPreprocPars.getScaling_factor());
+		if (paddingText!=null) {
+			paddingText.setText(""+trpPreprocPars.getPadding());	
+		}
+		if (scalingFactorText != null) {
+			scalingFactorText.setText(""+trpPreprocPars.getScaling_factor());	
+		}
 	}
 
 }

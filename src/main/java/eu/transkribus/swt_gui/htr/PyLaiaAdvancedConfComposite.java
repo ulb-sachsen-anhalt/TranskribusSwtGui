@@ -186,7 +186,7 @@ public class PyLaiaAdvancedConfComposite extends Composite {
 		preprocTf.setLayoutData(new GridData(GridData.FILL_BOTH));
 		
 		trpPreprocTi = new CTabItem(preprocTf, 0);
-		trpPreprocTi.setText("TRP (new)");
+		trpPreprocTi.setText("Transkribus (new)");
 		trpPreprocComp = new PyLaiaTrpPreprocComposite(preprocTf, trpPreprocPars);
 		trpPreprocTi.setControl(trpPreprocComp);
 		
