@@ -72,7 +72,7 @@ public class CreditPackagesUserAdminPagedTableWidget extends CreditPackagesUserP
 	@Override
 	protected void createColumns() {
 		super.createColumns();
-		createDefaultColumn(PACKAGE_ORDER_ID_COL, 80, "orderId", true);
+		createColumn(PACKAGE_ORDER_ID_COL, 80, "orderId", new PackageColumnLabelProvider(p -> "" + p.getOrderId()));
 	}
 	
 	@Override

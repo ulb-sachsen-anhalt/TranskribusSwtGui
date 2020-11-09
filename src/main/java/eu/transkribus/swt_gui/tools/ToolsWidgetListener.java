@@ -170,6 +170,10 @@ public class ToolsWidgetListener implements SelectionListener, IStorageListener 
 		} catch (StorageException e) {
 			DialogUtil.showErrorMessageBox(mw.getShell(), "Error", e.getMessage());
 			htd = null;
+		} catch (TrpClientErrorException e) {
+			DialogUtil.showErrorMessageBox(mw.getShell(), "Could not Start Training", e.getMessageToUser());
+			logger.error("Failed to start training: {}", e.getMessageToUser(), e);
+			htd = null;
 		} catch (Exception e) {
 			mw.onError("Error while starting training job: " + e.getMessage(), e.getMessage(), e);
 			htd = null;

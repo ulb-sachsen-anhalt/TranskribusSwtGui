@@ -4,8 +4,6 @@ import java.util.ArrayList;
 
 import javax.ws.rs.ServerErrorException;
 
-import org.eclipse.jface.viewers.CellLabelProvider;
-import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.widgets.Composite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +18,6 @@ import eu.transkribus.swt_gui.mainwidget.TrpMainWidget;
 import eu.transkribus.swt_gui.mainwidget.storage.Storage;
 
 public class CreditPackagesCollectionPagedTableWidget extends CreditPackagesUserPagedTableWidget {
-	private static final Logger logger = LoggerFactory.getLogger(CreditPackagesCollectionPagedTableWidget.class);
 	
 	TrpCollection collection;
 	
@@ -59,36 +56,16 @@ public class CreditPackagesCollectionPagedTableWidget extends CreditPackagesUser
 	
 	@Override
 	protected void createColumns() {
-		createColumn(PACKAGE_NAME_COL, 220, "label", new CellLabelProvider() {
-			@Override
-			public void update(ViewerCell cell) {
-				if (cell.getElement() instanceof TrpCreditPackage) {
-					cell.setText(((TrpCreditPackage)cell.getElement()).getProduct().getLabel());	
-				}
-			}
-		});
-		createDefaultColumn(PACKAGE_BALANCE_COL, 80, "balance", true);
-		createDefaultColumn(PACKAGE_USER_NAME_COL, 120, "userName", true);
+		createColumn(PACKAGE_NAME_COL, 220, "label", new PackageColumnLabelProvider(p -> p.getProduct().getLabel()));
+		createColumn(PACKAGE_BALANCE_COL, 80, "balance", new PackageColumnLabelProvider(p -> "" + p.getBalance()));
+		createColumn(PACKAGE_USER_NAME_COL, 120, "userName", new PackageColumnLabelProvider(p -> p.getUserName()));
 		//for now we don't need the userid
-//		createDefaultColumn(PACKAGE_USER_ID_COL, 50, "userId", true);
-		createColumn(PACKAGE_SHAREABLE_COL, 70, "shareable", new CellLabelProvider() {
-			@Override
-			public void update(ViewerCell cell) {
-				if (cell.getElement() instanceof TrpCreditPackage) {
-					cell.setText(((TrpCreditPackage)cell.getElement()).getProduct().getShareable() + "");	
-				}
-			}
-		});
-//		createDefaultColumn(PACKAGE_DATE_COL, 120, "purchaseDate", true);
+//		createDefaultColumn(PACKAGE_USER_ID_COL, 50, "userId", new PackageColumnLabelProvider(p -> "" + p.getUserId()));
+		createColumn(PACKAGE_SHAREABLE_COL, 70, "shareable", new PackageColumnLabelProvider(p -> "" + p.getProduct().getShareable()));
+		createColumn(PACKAGE_DATE_COL, 120, "purchaseDate", new PackageColumnLabelProvider(p -> "" + p.getPurchaseDate()));
 		//hide credit type as the value is currently not used anyway
-//		createColumn(PACKAGE_TYPE_COL, 100, "creditType", new CellLabelProvider() {
-//			@Override
-//			public void update(ViewerCell cell) {
-//				if (cell.getElement() instanceof TrpCreditPackage) {
-//					cell.setText(((TrpCreditPackage)cell.getElement()).getProduct().getCreditType());	
-//				}
-//			}
-//		});
-		createDefaultColumn(PACKAGE_ID_COL, 50, "packageId", true);
+//		createColumn(PACKAGE_TYPE_COL, 100, "creditType", new PackageColumnLabelProvider(p -> "" + p.getCreditType()));
+		createColumn(PACKAGE_EXPIRATION_DATE_COL, 120, "expirationDate", new PackageColumnLabelProvider(p -> "" + p.getExpirationDate()));
+		createColumn(PACKAGE_ID_COL, 50, "packageId", new PackageColumnLabelProvider(p -> "" + p.getPackageId()));
 	}
 }
