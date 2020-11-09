@@ -723,5 +723,6 @@ CHANGES AND BUGFIXES
 	-> Credit Manager Dialog: misc. usability fixes. Now shows the data for the collection, selected in the collection table, not the actually loaded collection when opened.
     -> HTR+ training: add option to skip lines with unclear and/or gap tags
     -> Event message dialog: is resizable & allows scrolling
+    -> integrate new and simplified PyLaia preprocessing including line dewarping
 
 	
