@@ -10,7 +10,7 @@
   - download and install the latest JDK from this Homepage: https://adoptopenjdk.net/
   
 ### Linux instructions
-With most distributions you can instsall a Java Runtime Environment from its repositories. Besides that, the webkit gtk package is required.
+With most distributions you can install a Java Runtime Environment from the repositories. Besides that, the webkit gtk package is required.
 
 ##### Fedora/RHEL
 Install webkit gtk:
