@@ -724,5 +724,6 @@ CHANGES AND BUGFIXES
     -> HTR+ training: add option to skip lines with unclear and/or gap tags
     -> Event message dialog: is resizable & allows scrolling
     -> integrate new and simplified PyLaia preprocessing including line dewarping
+    -> bugfix: UI freezes when HTR model was set for a collection and then deleted in HTR config dialog
 
 	
