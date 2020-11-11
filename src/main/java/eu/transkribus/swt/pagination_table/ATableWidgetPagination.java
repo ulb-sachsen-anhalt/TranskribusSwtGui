@@ -268,7 +268,7 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 					if (true && m == currentPage) {
 						logger.debug("already checked this page: "+m);
 						items = itemsOfAlreadySearchedPage;
-//						continue;
+//						continue; // never use continue in a while loop -> can easily lead to an endless loop...
 					}
 					// not checked -> retrieve items for this page from server
 					else {
@@ -314,6 +314,8 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 			        logger.debug("new l is " + l);
 			        logger.debug("new r is " + r);
 			    } 
+			    // not found --> select first page
+			    c.setCurrentPage(0);
 			
 			}
 		}

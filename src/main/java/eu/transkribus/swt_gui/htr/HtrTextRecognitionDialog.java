@@ -99,8 +99,7 @@ public class HtrTextRecognitionDialog extends Dialog {
 					if(trcd.open() == IDialogConstants.OK_ID) {
 						logger.info("OK pressed");
 						config = trcd.getConfig();
-						configTxt.setText(config.toString());
-						store.saveTextRecognitionConfig(config);
+						store.saveTextRecognitionConfig(config);	
 						updateUi();
 					}
 					trcd = null;
@@ -112,9 +111,6 @@ public class HtrTextRecognitionDialog extends Dialog {
 		
 		config = store.loadTextRecognitionConfig();
 		logger.debug("Config loaded:" + config);
-		if(config != null) {
-			configTxt.setText(config.toString());
-		}
 		
 		updateUi();
 		return cont;
@@ -160,50 +156,61 @@ public class HtrTextRecognitionDialog extends Dialog {
 			}
 		}
 		
-		if(config == null) {
+		if (config == null) {
 			DialogUtil.showErrorMessageBox(getShell(), "Bad Configuration", "Please define a configuration.");
 			return;
 		}
 		
-		boolean isCitlab = config!=null && config.getMode()==Mode.CITlab;
-		
-		if (isCitlab) {
-			logger.info(Arrays.toString(citlabConfComp.structreTagComp.getMultiCombo().getSelections()));
-			List<String> selectionList = Arrays.asList(citlabConfComp.structreTagComp.getMultiCombo().getSelections());  
-			config.setStructures(selectionList);
-			config.setKeepOriginalLinePolygons(citlabConfComp.keepOriginalLinePolygonsBtn.getSelection());
-			config.setDoLinePolygonSimplification(citlabConfComp.doLinePolygonSimplificationBtn.getSelection());
-			config.setDoStoreConfMats(citlabConfComp.doStoreConfMatsBtn.getSelection());			
-		}
-		else {
-			config.setUseExistingLinePolygons(pylaiaConfComp.useExistingLinePolygonsBtn.getSelection());
-			config.setDoLinePolygonSimplification(pylaiaConfComp.doLinePolygonSimplificationBtn.getSelection());
-			config.setDoWordSeg(pylaiaConfComp.doWordSegBtn.getSelection());
-			
-			try {
-				int batchSize = Integer.parseInt(pylaiaConfComp.batchSizeText.getText());
-				config.setBatchSize(batchSize);
+		if (config != null) {
+//			boolean isCitlab = config.getMode()==Mode.CITlab;
+			if (config.getMode()==Mode.CITlab) {
+				logger.info(Arrays.toString(citlabConfComp.structreTagComp.getMultiCombo().getSelections()));
+				List<String> selectionList = Arrays.asList(citlabConfComp.structreTagComp.getMultiCombo().getSelections());  
+				config.setStructures(selectionList);
+				config.setKeepOriginalLinePolygons(citlabConfComp.keepOriginalLinePolygonsBtn.getSelection());
+				config.setDoLinePolygonSimplification(citlabConfComp.doLinePolygonSimplificationBtn.getSelection());
+				config.setDoStoreConfMats(citlabConfComp.doStoreConfMatsBtn.getSelection());			
 			}
-			catch (Exception e) {
-				DialogUtil.showErrorMessageBox(getShell(), "Error parsing batch size", "Invalid batch size: "+pylaiaConfComp.batchSizeText.getText());
+			else if (config.getMode()==Mode.UPVLC) {
+				config.setUseExistingLinePolygons(pylaiaConfComp.useExistingLinePolygonsBtn.getSelection());
+				config.setDoLinePolygonSimplification(pylaiaConfComp.doLinePolygonSimplificationBtn.getSelection());
+				config.setDoWordSeg(pylaiaConfComp.doWordSegBtn.getSelection());
+				
+				try {
+					int batchSize = Integer.parseInt(pylaiaConfComp.batchSizeText.getText());
+					config.setBatchSize(batchSize);
+				}
+				catch (Exception e) {
+					DialogUtil.showErrorMessageBox(getShell(), "Error parsing batch size", "Invalid batch size: "+pylaiaConfComp.batchSizeText.getText());
+					return;
+				}
+			}
+			else  {
+				DialogUtil.showErrorMessageBox(getShell(), "Bad Configuration", "No Citlab or UPVLC model selected - should not happen...");
 				return;
 			}
+			//TODO make this configurable in GUI
+			config.setCreditSelectionStrategy(CreditSelectionStrategy.COLLECTION_THEN_USER);
 		}
-		//TODO make this configurable in GUI
-		config.setCreditSelectionStrategy(CreditSelectionStrategy.COLLECTION_THEN_USER);		
+		
 		super.okPressed();
 	}
 	
 	private void updateUi() {
-		boolean isCitlab = config!=null && config.getMode()==Mode.CITlab;
-		
-		if (isCitlab) {
+//		boolean isCitlab = config!=null && config.getMode()==Mode.CITlab;
+		configTxt.setText(config!=null ? config.toString() : "");
+		if (config == null) {
+			citlabConfComp.setParent(SWTUtil.dummyShell);
+			pylaiaConfComp.setParent(SWTUtil.dummyShell);
+			container.layout();			
+		}
+		else if (config.getMode()==Mode.CITlab) {
 			citlabConfComp.setParent(container);
 			citlabConfComp.moveAbove(configTxt);
 			pylaiaConfComp.setParent(SWTUtil.dummyShell);
 			container.layout();
 		}
-		else {
+		else if (config.getMode()==Mode.UPVLC) {
 			pylaiaConfComp.setParent(container);
 			pylaiaConfComp.moveAbove(configTxt);
 			citlabConfComp.setParent(SWTUtil.dummyShell);
