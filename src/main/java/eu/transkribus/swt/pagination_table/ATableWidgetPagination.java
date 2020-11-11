@@ -244,6 +244,7 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 			}
 			// 2nd: search pages one by one:
 			else {
+				List<T> itemsOfAlreadySearchedPage = itemsCopy;
 				int currentPage = c.getCurrentPage();
 				logger.debug("total elements = "+c.getTotalElements());
 				
@@ -259,22 +260,25 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 					return;
 				}
 				
-			    while (l <= r) 
-			    { 
+			    while (l <= r) { 
 			        // find index of middle element 
 			        int m = (l+r)/2; 
 			        
-					if (m == currentPage) // already checked!
-						continue;
+			        // already checked
+					if (true && m == currentPage) {
+						logger.debug("already checked this page: "+m);
+						items = itemsOfAlreadySearchedPage;
+//						continue;
+					}
+					// not checked -> retrieve items for this page from server
+					else {
+						logger.debug("page to look at: " + m);
+						c1.setCurrentPage(m);
+						c.setCurrentPage(m);
+						items = (List<T>) pageableTable.getViewer().getInput();
+					}
 					
-					logger.debug("page to look at: " + m);
-
-					c1.setCurrentPage(m);
-					
-					c.setCurrentPage(m);
-					items = (List<T>) pageableTable.getViewer().getInput();
 					itemsCopy = CoreUtils.copyList(items);
-					
 					//items = res.getContent();
 					//
 			  
@@ -309,7 +313,6 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 			        
 			        logger.debug("new l is " + l);
 			        logger.debug("new r is " + r);
-
 			    } 
 			
 			}
