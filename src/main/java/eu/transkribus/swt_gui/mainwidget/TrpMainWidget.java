@@ -5397,6 +5397,7 @@ public class TrpMainWidget {
 		String ht = ""
 //				+ "Canvas shortcut operations:\n"
 				+ "- esc: set selection mode\n"
+				+ "- hold down either the left mouse button on an empty image area or the right mouse button to move the image\n"
 				+ "- shift + drag-on-bounding-box: resize shape on bounding box\n"
 				+ "- shift + drag shape: move shape including all its child shapes\n"
 				+ "- ctrl/cmd + selecting shapes: select multiple shapes\n"
