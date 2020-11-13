@@ -50,7 +50,7 @@ public class HtrModelChooserButton extends Composite {
 		SWTUtil.onSelectionEvent(baseModelBtn, (e) -> {
 			HtrModelsDialog diag = new HtrModelsDialog(getShell(), doubleClickSelectionEnabled, providerFilter);
 			if (diag.open() == Dialog.OK) {
-				if (providerFilter.equals(HtrPyLaiaUtils.PROVIDER_PYLAIA)) {
+				if (providerFilter != null && providerFilter.equals(HtrPyLaiaUtils.PROVIDER_PYLAIA)) {
 					int res = DialogUtil.showYesNoDialog(getShell(), "Do you really want to use a base model?",
 							"Training with base models for PyLaia requires the exact same character set.\n"
 							+ "Elsewise, the training will produce an error or a model that outputs only the characters from the base model and is unable to use a language model.\n"
