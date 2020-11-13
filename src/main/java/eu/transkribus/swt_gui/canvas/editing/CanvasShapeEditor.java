@@ -635,6 +635,12 @@ public class CanvasShapeEditor {
 	}
 	
 	private ShapeEditOperation moveShapeDefault(ICanvasShape shape, int mouseTrX, int mouseTrY, ShapeEditOperation currentMoveOp, boolean addToUndoStack) {
+		List<ICanvasShape> shapes = new ArrayList<>();
+		shapes.add(shape);
+		return moveShapesDefault(shapes, mouseTrX, mouseTrY, currentMoveOp, addToUndoStack);
+	}
+	
+	private ShapeEditOperation moveShapesDefault(List<ICanvasShape> shapes, int mouseTrX, int mouseTrY, ShapeEditOperation currentMoveOp, boolean addToUndoStack) {
 		// invert transform:
 		java.awt.Point transWoTr = canvas.getPersistentTransform().inverseTransformWithoutTranslation(mouseTrX, mouseTrY);
 		logger.trace("t = "+transWoTr);
@@ -642,11 +648,13 @@ public class CanvasShapeEditor {
 		// if first move --> determine shapes to move
 		if (currentMoveOp==null) {
 			List<ICanvasShape> shapesToMove = new ArrayList<>();
-			shapesToMove.add(shape);
+			shapesToMove.addAll(shapes);
 			// move subshapes if required key down:
 			if (CanvasKeys.isKeyDown(canvas.getKeyListener().getCurrentStateMask(), CanvasKeys.MOVE_SUBSHAPES_REQUIRED_KEY)) {
-				logger.debug("moving subshapes!");
-				shapesToMove.addAll(shape.getChildren(true));
+				for (ICanvasShape shape : shapes) {
+					logger.trace("moving subshapes!");
+					shapesToMove.addAll(shape.getChildren(true));					
+				}
 			}
 			currentMoveOp = new ShapeEditOperation(ShapeEditType.EDIT, "Moved shape(s)", shapesToMove);
 			if (addToUndoStack) {
@@ -683,8 +691,10 @@ public class CanvasShapeEditor {
 	}
 	
 	/** Translate the selection object by the given coordinates. The translation is always given as the \emph{total}
-	 * translation for a current move operation so that rounding errors are minimized! 
-	 * **/
+	 * translation for a current move operation so that rounding errors are minimized!
+	 * 
+	 *  If the shape is a TableCell --> move either the cell alone or depending on the additional buttons pressed, the whole column or row
+	*/
 	public ShapeEditOperation moveShape(ICanvasShape shape, int mouseTrX, int mouseTrY, ShapeEditOperation currentMoveOp, boolean addToUndoStack) {
 //		ICanvasShape selected = canvas.getFirstSelected();
 		if (shape == null)
@@ -708,6 +718,18 @@ public class CanvasShapeEditor {
 			return moveShapeDefault(shape, mouseTrX, mouseTrY, currentMoveOp, addToUndoStack);
 		}
 	}
+	
+	// move multiple shapes at once; does not work for TableCell's currently!
+	public ShapeEditOperation moveShapes(List<ICanvasShape> shapes, int mouseTrX, int mouseTrY, ShapeEditOperation currentMoveOp, boolean addToUndoStack) {
+		for (ICanvasShape s : shapes) {
+			TrpTableCellType tc = TableUtils.getTableCell(s);
+			if (tc != null) {
+				logger.debug("cannot move multiple table cells at once --> returnin null!");
+				return null;
+			}
+		}
+		return moveShapesDefault(shapes, mouseTrX, mouseTrY, currentMoveOp, addToUndoStack);
+	}	
 
 	public SWTCanvas getCanvas() {
 		return canvas;

@@ -1385,16 +1385,32 @@ public class SWTCanvas extends Canvas {
 		}
 	}
 
-	public boolean isMovingShapePossible() {
+	public boolean isMovingShapePossible(boolean isMultiSelect) {
 		int selectedPoint = mouseListener.getSelectedPoint();
 		Point mPt = mouseListener.getMousePtWoTr();
-		ICanvasShape selected = getFirstSelected();
+		
+		if (selectedPoint == -1 && mouseListener.getSelectedDirection()==RectDirection.NONE
+				&& mouseListener.getSelectedLine()==null && mPt != null && getMode() == CanvasMode.SELECTION) {
+			List<ICanvasShape> shapes = new ArrayList<>();
+			if (isMultiSelect) {
+				shapes.addAll(scene.getSelected());
+			}
+			else {
+				shapes.add(getFirstSelected());
+			}			
+			return shapes.stream().filter(s -> s!=null && s.isEditable() && s.contains(mPt)).findFirst().orElse(null) != null;
+		}
+		else {
+			return false;
+		}
 
-		return (selectedPoint == -1 && mouseListener.getSelectedDirection()==RectDirection.NONE
-				&& mouseListener.getSelectedLine()==null &&
-				selected != null
-				&& selected.isEditable() && mPt != null
-				&& selected.contains(mPt) && getMode() == CanvasMode.SELECTION);
+		// OLD code:
+//		ICanvasShape selected = getFirstSelected();
+//		return (selectedPoint == -1 && mouseListener.getSelectedDirection()==RectDirection.NONE
+//				&& mouseListener.getSelectedLine()==null &&
+//				selected != null
+//				&& selected.isEditable() && mPt != null
+//				&& selected.contains(mPt) && getMode() == CanvasMode.SELECTION);
 	}
 
 	public CanvasScene getScene() {
