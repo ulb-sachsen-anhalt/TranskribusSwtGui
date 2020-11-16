@@ -164,31 +164,43 @@ public class HtrTextRecognitionConfigDialog extends Dialog {
 
 	@Override
 	protected void okPressed() {
-		htrModelsComp.hdw.checkForUnsavedChanges();
-		TrpHtr htr = htrModelsComp.getSelectedHtr();
-		
-		Mode mode = getModeForProvider(htr.getProvider());
-		if (mode == null) {
-			DialogUtil.showErrorMessageBox(getShell(), "Error parsing mode from provider", "Unknown model provider: "+htr.getProvider());
-			return;
+		try {
+			htrModelsComp.hdw.checkForUnsavedChanges();
+			TrpHtr htr = htrModelsComp.getSelectedHtr();
+			
+			if (htr != null) {
+				Mode mode = getModeForProvider(htr.getProvider());
+				if (mode == null) {
+					DialogUtil.showErrorMessageBox(getShell(), "Error parsing mode from provider", "Unknown model provider: "+htr.getProvider());
+					return;
+				}
+				config = new TextRecognitionConfig(mode);
+				
+				if (mode == Mode.CITlab) { // FIXME: set language model here once ready for CITlab recognition
+					config.setDictionary(htrDictComp.getDictionarySetting());
+				}
+				else { // for PyLaia, only language model setting is relevant!
+					config.setLanguageModel(htrDictComp.getLanguageModelSetting());	
+				}
+				
+//				if (htr == null) {
+//					DialogUtil.showErrorMessageBox(this.getParentShell(), "Error", "Please select a HTR.");
+//					return;
+//				}
+				config.setHtrId(htr.getHtrId());
+				config.setHtrName(htr.getName());
+				config.setLanguage(htr.getLanguage());				
+			}
+			else {
+				logger.debug("model was probably deleted - setting config to null!");
+				config = null;
+			}
+		} catch (Exception e) {
+			logger.error("Error while setting HTR: "+e.getMessage(), e);
 		}
-		config = new TextRecognitionConfig(mode);
-		
-		if (mode == Mode.CITlab) { // FIXME: set language model here once ready for CITlab recognition
-			config.setDictionary(htrDictComp.getDictionarySetting());
+		finally {
+			super.okPressed();
 		}
-		else { // for PyLaia, only language model setting is relevant!
-			config.setLanguageModel(htrDictComp.getLanguageModelSetting());	
-		}
-		
-		if (htr == null) {
-			DialogUtil.showErrorMessageBox(this.getParentShell(), "Error", "Please select a HTR.");
-			return;
-		}
-		config.setHtrId(htr.getHtrId());
-		config.setHtrName(htr.getName());
-		config.setLanguage(htr.getLanguage());
-		super.okPressed();
 	}
 	
 	@Override

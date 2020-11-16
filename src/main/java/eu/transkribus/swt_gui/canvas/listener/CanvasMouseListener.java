@@ -191,13 +191,11 @@ public class CanvasMouseListener implements MouseListener, MouseMoveListener, Mo
 		mouseMoveMap.put(button, new Point(e.x, e.y));
 		mouseUpMap.put(button, null);
 				
-		boolean isMovingShapePossible = canvas.isMovingShapePossible();
-		
 		// set move image mode:
 		final boolean isMoveImgOnLeftBtnPossible = 
 				(canvas.getMode() == CanvasMode.SELECTION || canvas.getMode() == CanvasMode.LOUPE) && 
 				button == settings.getSelectMouseButton() 
-				&& !isMovingShapePossible && shapeBoundaryPt == null 
+				&& !canvas.isMovingShapePossible(isMultiselect) && shapeBoundaryPt == null 
 				&& mouseOverPoint == -1 && e.stateMask==0 && e.stateMask != CanvasKeys.SELECTION_RECTANGLE_REQUIRED_KEYS;
 		
 //		if (button == settings.getTranslateMouseButton()) {
@@ -249,7 +247,7 @@ public class CanvasMouseListener implements MouseListener, MouseMoveListener, Mo
 		
 		// set move shape mode:
 		if (canvas.getMode() == CanvasMode.SELECTION && button == settings.getSelectMouseButton() 
-				&& !canvas.isMovingBoundingBoxPossible() && canvas.isMovingShapePossible() 
+				&& !canvas.isMovingBoundingBoxPossible() && canvas.isMovingShapePossible(isMultiselect) 
 //				&& e.stateMask != CanvasKeys.SELECTION_RECTANGLE_REQUIRED_KEYS
 				) {
 			modeBackup = settings.getMode();
@@ -338,9 +336,17 @@ public class CanvasMouseListener implements MouseListener, MouseMoveListener, Mo
 			else if (canvas.getMode()==CanvasMode.MOVE_SHAPE && isLagThresh) {
 				Point trans = getTotalTranslation(mousePt, settings.getSelectMouseButton());
 				if (trans != null) {
-					currentMoveOp = canvas.getShapeEditor().moveShape(canvas.getFirstSelected(), trans.x, trans.y, currentMoveOp, true);
-					if (firstMove)
+					boolean isMultiselect = CanvasKeys.isCtrlOrCommandKeyDown(e.stateMask);
+					if (isMultiselect) {
+						currentMoveOp = canvas.getShapeEditor().moveShapes(canvas.getScene().getSelected(), trans.x, trans.y, currentMoveOp, true);
+					}
+					else {
+						currentMoveOp = canvas.getShapeEditor().moveShape(canvas.getFirstSelected(), trans.x, trans.y, currentMoveOp, true);
+					}
+					
+					if (firstMove) {
 						firstMove = false;
+					}
 					hasMouseMoved=true;
 				}
 			}

@@ -5397,12 +5397,14 @@ public class TrpMainWidget {
 		String ht = ""
 //				+ "Canvas shortcut operations:\n"
 				+ "- esc: set selection mode\n"
+				+ "- hold down either the left mouse button on an empty image area or the right mouse button to move the image\n"
 				+ "- shift + drag-on-bounding-box: resize shape on bounding box\n"
 				+ "- shift + drag shape: move shape including all its child shapes\n"
+				+ "- ctrl/cmd + selecting shapes: select multiple shapes\n"
+				+ "- ctrl/cmd + dragging shape(s): move multiple selected shapes\n"
 				+ "- right click on a shape: context menu with additional operations\n"
 				+ "  (note: on mac touchpads, right-clicks are performed using two fingers simultaneously)"
 				;
-		
 		
 		int res = DialogUtil.showMessageDialog(getShell(), "Canvas shortcut operations", ht, null, MessageDialog.INFORMATION, 
 				new String[] {"OK"}, 0);
