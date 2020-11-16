@@ -10,6 +10,8 @@ import org.eclipse.jface.bindings.keys.KeyStroke;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.fieldassist.TextContentAdapter;
+import org.eclipse.jface.layout.GridDataFactory;
+import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
@@ -177,7 +179,8 @@ public class LoginDialog extends Dialog {
 			prov = null;
 		}
 		if(prov != null) {
-			initOAuthAccountFields(prov);
+			initOAuthInfo(prov);
+//			initOAuthAccountFields(prov);
 		} else {
 			initTranskribusAccountFields();
 		}
@@ -255,6 +258,42 @@ public class LoginDialog extends Dialog {
 		}
 	}
 
+	private void initOAuthInfo(OAuthProvider prov){
+		clearGrpCreds(1);
+		Text infoText = new Text(grpCreds, SWT.READ_ONLY | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP);
+		infoText.setLayoutData(new GridData(GridData.FILL_BOTH));
+		
+		String btnTxtBase = "The login with Google is no longer supported in Transkribus.\n"
+				+ "You can access all of your documents after setting a password on our website.";
+		final String resetPwUrlBase = "https://account.readcoop.eu/auth/realms/readcoop/login-actions/reset-credentials?client_id=account";
+		
+		OAuthCreds creds = TrpGuiPrefs.getOAuthCreds(prov);
+		final String resetPwUrl;
+		final String btnTxt;
+		if(creds != null && creds.getUserName() != null) {
+			resetPwUrl = resetPwUrlBase + "&prefillUsername=" + creds.getUserName();
+			btnTxt = btnTxtBase + " Please enter '" + creds.getUserName() + "' as username.";
+		} else {
+			resetPwUrl = resetPwUrlBase;
+			btnTxt = btnTxtBase + " Please enter your Google mail address as username.";
+		}
+		infoText.setText(btnTxt);
+		
+		Button resetPwBtn = new Button(grpCreds, SWT.PUSH);
+		resetPwBtn.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		resetPwBtn.setText("Take me to the password reset form...");
+		resetPwBtn.setImage(Images.getOrLoad("/icons/world.png"));
+		resetPwBtn.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				DesktopUtil.browse(resetPwUrl, 
+						"Sorry, we could not identify your browser.\nTo reset your password, please got to:\n\n" + resetPwUrl, 
+						LoginDialog.this.getParentShell());
+			}
+		});
+	}
+	
+	@Deprecated
 	private void initOAuthAccountFields(OAuthProvider prov){
 		clearGrpCreds(4);
 		Label userLabel = new Label(grpCreds, SWT.FLAT);
@@ -291,6 +330,7 @@ public class LoginDialog extends Dialog {
 		}
 	}
 	
+	@Deprecated
 	private void initConnectOAuthAccountBtn(Button btnConnect, final OAuthProvider prov) {
 		btnConnect.addSelectionListener(new SelectionAdapter() {
 			@Override public void widgetSelected(SelectionEvent e) {
@@ -312,7 +352,7 @@ public class LoginDialog extends Dialog {
 			}
 		});
 	}
-
+	@Deprecated
 	private void initDisconnectOAuthAccountBtn(Button btnConnect, final OAuthProvider prov) {
 		btnConnect.addSelectionListener(new SelectionAdapter() {
 			@Override public void widgetSelected(SelectionEvent e) {

@@ -21,6 +21,7 @@ import eu.transkribus.swt.progress.ProgressBarDialog;
 import eu.transkribus.swt_gui.mainwidget.TrpMainWidget;
 import eu.transkribus.swt_gui.mainwidget.storage.Storage;
 
+@Deprecated
 public class OAuthGuiUtil {
 	private static final Logger logger = LoggerFactory.getLogger(OAuthGuiUtil.class);
 
