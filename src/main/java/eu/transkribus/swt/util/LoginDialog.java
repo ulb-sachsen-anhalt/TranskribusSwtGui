@@ -10,8 +10,6 @@ import org.eclipse.jface.bindings.keys.KeyStroke;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.fieldassist.TextContentAdapter;
-import org.eclipse.jface.layout.GridDataFactory;
-import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
@@ -184,10 +182,18 @@ public class LoginDialog extends Dialog {
 		} else {
 			initTranskribusAccountFields();
 		}
+		updateLoginButtonEnabledState(provStr);
 		
 		grpCreds.layout();
 	}
 	
+	private void updateLoginButtonEnabledState(String provStr) {
+		//enable OK button only if Transkribus account is selected
+		if(getButton(IDialogConstants.OK_ID) != null) {
+			getButton(IDialogConstants.OK_ID).setEnabled(provStr == null || OAuthGuiUtil.TRANSKRIBUS_ACCOUNT_TYPE.contentEquals(provStr));
+		}
+	}
+
 	private void initTranskribusAccountFields() {
 		
 		clearGrpCreds(2);
@@ -426,6 +432,8 @@ public class LoginDialog extends Dialog {
 	protected void createButtonsForButtonBar(Composite parent) {
 		createButton(parent, IDialogConstants.OK_ID, "Login", true);
 		createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false);
+		
+		updateLoginButtonEnabledState(getAccountType());
 	}
 
 	@Override
