@@ -275,7 +275,7 @@ public class LoginDialog extends Dialog {
 			btnTxt = btnTxtBase + " Please enter '" + creds.getUserName() + "' as username.";
 		} else {
 			resetPwUrl = resetPwUrlBase;
-			btnTxt = btnTxtBase + " Please enter your Google mail address as username.";
+			btnTxt = btnTxtBase + " Please enter your Google email address as username.";
 		}
 		infoText.setText(btnTxt);
 		
