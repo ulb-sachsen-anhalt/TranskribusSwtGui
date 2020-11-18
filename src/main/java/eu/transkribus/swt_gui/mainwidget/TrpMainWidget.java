@@ -513,26 +513,12 @@ public class TrpMainWidget {
 				if (OAuthGuiUtil.TRANSKRIBUS_ACCOUNT_TYPE.equals(lastAccount)) {
 					Pair<String, String> lastLogin = TrpGuiPrefs.getLastStoredCredentials();
 					if (lastLogin != null) {
-						// TODO: also remember server in TrpGuiPrefs, for now: logon to prod server
 						login(TrpServerConn.PROD_SERVER_URI, lastLogin.getLeft(), lastLogin.getRight(), true);
 					}
 				} else {
-					OAuthProvider prov;
-					try {
-						prov = OAuthProvider.valueOf(lastAccount);
-					} catch (Exception e) {
-						prov = null;
-					}
-					if (prov != null) {
-						//TODO get state token from server
-						final String state = "test";
-						OAuthCreds creds = TrpGuiPrefs.getOAuthCreds(prov);
-						loginOAuth(TrpServerConn.PROD_SERVER_URI, creds.getRefreshToken(), state, OAuthGuiUtil.REDIRECT_URI, prov);
-					}
+					// >=1.13.0: Google Login is no longer supported. Stop here and show LoginDialog with instructions
+					mw.loginDialog("Please set a password and use the Transkribus login");
 				}
-			
-			} catch (OAuthTokenRevokedException e) {
-				logger.error("OAuth token was revoked!", e);
 			} catch (Exception e) {
 				logger.error("Error during login in postInit: "+e.getMessage(), e);
 			}
