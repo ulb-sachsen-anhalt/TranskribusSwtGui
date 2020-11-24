@@ -31,7 +31,8 @@ public class TextRecognitionComposite extends Composite {
 	public static final String METHOD_OCR = "OCR (Abbyy FineReader)";
 	public static final String METHOD_HTR = "HTR (CITlab HTR+ & PyLaia)";
 	
-	public static final String[] METHODS = { METHOD_HTR, METHOD_OCR };
+	public static final String[] METHODS_ADMIN = { METHOD_HTR, METHOD_OCR };
+	public static final String[] METHODS = { METHOD_HTR };
 	
 	Button runBtn;
 	
@@ -136,6 +137,10 @@ public class TextRecognitionComposite extends Composite {
 	}
 	
 	private void setBtnVisibility(boolean withTrainBtn) {
+		if (Storage.getInstance()!=null) {
+			methodCombo.combo.setItems(Storage.getInstance().isAdminLoggedIn() ? METHODS_ADMIN : METHODS);
+			methodCombo.combo.select(0);
+		}
 		
 		boolean showTrainBtn = withTrainBtn && isHtr();
 		boolean showModelBtn = isHtr();
@@ -161,7 +166,7 @@ public class TextRecognitionComposite extends Composite {
 		this.redraw();
 		super.layout(true, true);
 		
-		logger.info("parent: "+getParent());
+		logger.trace("parent: "+getParent());
 		getParent().layout();
 	}
 
