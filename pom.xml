@@ -4,7 +4,7 @@
 	<groupId>eu.transkribus</groupId>
 	<artifactId>TranskribusSwtGui</artifactId>
 	<packaging>jar</packaging>
-	<version>1.13.0.2-SNAPSHOT</version>
+	<version>1.14.0.1-SNAPSHOT</version>
 	<name>Transkribus</name>
 
 	<properties>
@@ -956,11 +956,10 @@
 	</dependencies>
 
 	<repositories>
-		<!-- dea artifactory: -->		
 		<repository>
-			<id>dea-artifactory</id>
-			<name>dea-artifactory-releases</name>
-			<url>https://dbis-halvar.uibk.ac.at/artifactory/libs-release/</url>
+			<id>transkribus-artifactory</id>
+			<name>transkribus-artifactory-releases</name>
+			<url>https://transkribus.eu/artifactory/libs-release/</url>
 		</repository>
 		<repository>
 			<id>maven2-repository.dev.java.net</id>
