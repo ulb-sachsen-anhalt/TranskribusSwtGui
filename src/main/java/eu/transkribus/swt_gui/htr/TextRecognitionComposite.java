@@ -88,6 +88,8 @@ public class TextRecognitionComposite extends Composite {
 		
 		Storage.getInstance().addListener(new IStorageListener() {
 			public void handleLoginOrLogout(LoginOrLogoutEvent arg) {
+				methodCombo.combo.setItems(Storage.getInstance().isAdminLoggedIn() ? METHODS_ADMIN : METHODS);
+				methodCombo.combo.select(0);
 				updateGui();
 			}
 		});
@@ -137,11 +139,6 @@ public class TextRecognitionComposite extends Composite {
 	}
 	
 	private void setBtnVisibility(boolean withTrainBtn) {
-		if (Storage.getInstance()!=null) {
-			methodCombo.combo.setItems(Storage.getInstance().isAdminLoggedIn() ? METHODS_ADMIN : METHODS);
-			methodCombo.combo.select(0);
-		}
-		
 		boolean showTrainBtn = withTrainBtn && isHtr();
 		boolean showModelBtn = isHtr();
 		
