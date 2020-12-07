@@ -13,6 +13,7 @@ import org.eclipse.swt.widgets.Label;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.transkribus.core.model.beans.DocSelection;
 import eu.transkribus.core.model.beans.TrpHtr;
 import eu.transkribus.core.model.beans.enums.EditStatus;
 import eu.transkribus.core.util.EnumUtils;
@@ -20,6 +21,7 @@ import eu.transkribus.swt.util.DialogUtil;
 import eu.transkribus.swt.util.SWTUtil;
 import eu.transkribus.swt_gui.htr.HtrModelChooserButton;
 import eu.transkribus.swt_gui.util.CurrentTranscriptOrCurrentDocPagesSelector;
+import eu.transkribus.swt_gui.util.CurrentTranscriptOrDocPagesOrCollectionSelector;
 
 public class Text2ImageSimplifiedConfComposite extends Composite {
 	private static final Logger logger = LoggerFactory.getLogger(Text2ImageSimplifiedConfComposite.class);
@@ -32,7 +34,8 @@ public class Text2ImageSimplifiedConfComposite extends Composite {
 	Combo thresholdCombo;
 	Combo editStatusCombo;
 //	Combo thresholdText;
-	CurrentTranscriptOrCurrentDocPagesSelector pagesSelector;
+//	CurrentTranscriptOrCurrentDocPagesSelector pagesSelector;
+	CurrentTranscriptOrDocPagesOrCollectionSelector pagesSelector;
 	Button allowIgnoringTranscriptsBtn, allowSkippingBaselinesBtn, allowIgnoringReadingOrderBtn;
 	Button useHyphenBtn;
 	
@@ -51,6 +54,10 @@ public class Text2ImageSimplifiedConfComposite extends Composite {
 		
 		public boolean currentTranscript=true;
 		public String pagesStr=null;
+		
+		public boolean isDocsSelection=false;
+		public List<DocSelection> docsSelected = null;
+		
 		
 		public Text2ImageConf() {}
 		public Text2ImageConf(TrpHtr model, boolean performLa, boolean removeLineBreaks, double threshold) {
@@ -80,8 +87,14 @@ public class Text2ImageSimplifiedConfComposite extends Composite {
 //		modelLabel.setText("Base model");
 //		modelLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1));
 		
-		pagesSelector = new CurrentTranscriptOrCurrentDocPagesSelector(this, SWT.NONE, true,true);
-		pagesSelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, nCols, 1));	
+		/*
+		 * old one without batch mode (chosing several docs from collection)
+		 */
+//		pagesSelector = new CurrentTranscriptOrCurrentDocPagesSelector(this, SWT.NONE, true,true);
+//		pagesSelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, nCols, 1));	
+		
+		pagesSelector = new CurrentTranscriptOrDocPagesOrCollectionSelector(this, SWT.NONE, false, true, true);		
+		pagesSelector.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false, 1, 1));
 		
 		baseModelBtn = new HtrModelChooserButton(this, true, null, "Base model: ");
 		baseModelBtn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, nCols, 1));
@@ -188,6 +201,9 @@ public class Text2ImageSimplifiedConfComposite extends Composite {
 		conf.currentTranscript = pagesSelector.isCurrentTranscript();
 		conf.pagesStr = pagesSelector.getPagesStr();
 		
+		conf.isDocsSelection = pagesSelector.isDocsSelection();
+		conf.docsSelected = pagesSelector.getDocSelections();
+		
 		conf.model = baseModelBtn.getModel();
 		conf.performLa = performLaBtn.getSelection();
 		conf.removeLineBreaks = removeLineBreaksBtn.getSelection();
@@ -218,6 +234,15 @@ public class Text2ImageSimplifiedConfComposite extends Composite {
 		
 		return conf;
 	}
+	
+	public boolean isDocsSelection() {
+		return pagesSelector.isDocsSelection();
+	}
+	
+	public List<DocSelection> getDocs() {
+		return pagesSelector.getDocSelections();
+	}
+	
 		
 
 }
