@@ -718,19 +718,43 @@ public class ToolsWidgetListener implements SelectionListener, IStorageListener 
 					int ret = od.open();
 
 					if (ret == IDialogConstants.OK_ID) {
-						final String pageStr = od.getPages();
+						final String pages;
 						final OcrConfig config = od.getConfig();
+						String msg;						
 						
-						String msg = "Do you really want to start the OCR for page(s) " + pageStr + "  ?";
+						final boolean isDocsSelection = od.isDocsSelection() && od.getDocs() != null && Storage.getInstance().isAdminLoggedIn();
+						if (isDocsSelection) {
+							pages = null;
+							msg = "Do you really want to start the OCR for "+ od.getDocs().size() + " docs in this collection?";
+						} else {
+							pages = od.getPages();
+							msg = "Do you really want to start the HTR for page(s) " + pages + " ?";
+						}
+
 						if (DialogUtil.showYesNoDialog(mw.getShell(), "Optical Character Recognition", msg)!=SWT.YES) {
 							od = null;
 							return;
 						}
 						
-						logger.info("starting ocr for doc " + store.getDocId() + ", pages " + pageStr + " and col "
-								+ colId);
-						String jobId = store.runOcr(colId, store.getDocId(), pageStr, config);
-						jobIds.add(jobId);
+						if (isDocsSelection){
+							// NEW: use DocSelection here, as they contain the pages string for each doc:
+							for (DocSelection docSel : od.getDocs()) {
+								//DocumentSelectionDescriptor dsd = store.getDocumentSelectionDescriptor(colId, docSel);
+								//logger.debug("dsd = "+dsd);								
+								logger.info("starting ocr for doc " + docSel.getDocId() + ", pages " + docSel.getPages() + " and col "
+										+ colId);
+								String jobId = store.runOcr(colId, docSel.getDocId(), docSel.getPages(), config);
+								jobIds.add(jobId);
+							}
+
+						} else {
+							logger.info("starting ocr for doc " + store.getDocId() + ", pages " + pages + " and col "
+									+ colId);
+							String jobId = store.runOcr(colId, store.getDocId(), pages, config);
+							jobIds.add(jobId);
+						}
+						
+
 					}
 					od = null;
 				}
