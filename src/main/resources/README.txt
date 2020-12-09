@@ -8,7 +8,7 @@ or copy a JRE into the program directory!
 - To run the program from command line type:
 	java -jar Transkribus-<version>.jar
 	
-- To start the program from the user interface via doubleclick the following scripts are available:
+- To start the program from the user interface via double-click the following scripts are available:
 	Windows: Transkribus.bat
 	MAC: Transkribus.command
 	Linux: Transkribus.sh

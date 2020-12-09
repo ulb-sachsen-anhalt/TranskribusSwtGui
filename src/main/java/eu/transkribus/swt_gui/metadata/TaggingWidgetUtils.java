@@ -83,7 +83,7 @@ public class TaggingWidgetUtils {
 		List<Pair<ITrpShapeType, CustomTag>> tags4Shapes = new ArrayList<>();
 		ATranscriptionWidget aw = ui.getSelectedTranscriptionWidget();
 		if (aw==null) {
-			logger.debug("no transcription widget selected - doin nothing!");
+			logger.debug("no transcription widget selected - doing nothing!");
 			return tags4Shapes;
 		}
 		List<Pair<ITrpShapeType, IntRange>> selRanges = aw.getSelectedShapesAndRanges();

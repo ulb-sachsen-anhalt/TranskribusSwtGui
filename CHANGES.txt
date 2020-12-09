@@ -65,7 +65,7 @@ CHANGES AND BUGFIXES
 0.4.6:
 -> Changes over multiple lines should now be possible in the line transcription widget and behave as such:
 	- if the number of lines inserted is greater than the number of affected lines (i.e. the marked lines), 
-		the excessive newline characters are replaced with whitespaces to guarentee insertion of the whole text 
+		the excessive newline characters are replaced with whitespaces to guarantee insertion of the whole text
 	- if the number of lines inserted is less than the number of affected lines, the remaining affected lines will be cleared
 -> Removed bug that selected parent region after any edit operation
 -> Fixed another memory leak problem
@@ -112,7 +112,7 @@ CHANGES AND BUGFIXES
 	
 0.5.0:
 	-> Bugfixes (as always...)
-	-> Finish a shape on doubleclick
+	-> Finish a shape on double-click
 	-> Polyrectangles (instead of just rectangles) are automatically created as parent shapes for baselines
 	-> Choose to remember decision of auto-creating parent shapes in dialog
 	-> Can now toggle the auto-centering feature in transcription widget (property is: centerCurrentTranscriptionLine)
@@ -248,16 +248,16 @@ CHANGES AND BUGFIXES
 		- can now respect blackenings
 		- includes all region types (graphic, images, blackening regions etc.) 
 	-> user can view how is currently browsing which page ("People" button beside collection manager button in doc overview)
-	-> recieve copy of bug report / feature request option
+	-> receive copy of bug report / feature request option
  	-> paged table in search docs
  	-> CATTI bug with puncuation marks fixed by using tokenization / detokenization of prefix / suffix
  	-> bugfix: could not save text styles over whole line
  	-> bugfix: could not delete gap tag (and any other empty tag) when selection area was starting from this tag onwards
  	
  0.7.2:
- 	-> bugix: baselines were assigned to wrong parent element when splitted
+	-> bugfix: baselines were assigned to wrong parent element when split
  	-> new "text recognition" interface
-	-> bugfix: chnage of colors from config file were not applied after restart
+	-> bugfix: change of colors from config file were not applied after restart
 	-> event messages
 	-> bugfixes in PDF export
 	-> Loupe function
@@ -303,7 +303,7 @@ CHANGES AND BUGFIXES
 	-> rendering of polyrectangle around baselines (and selection of the baselines within those)
 	-> locking zoom on focus possible (via wrench tool on canvas toolbar)
 	-> auto login feature
-	-> fixed catti bug (whitespace from recieved suffix removed)
+	-> fixed catti bug (whitespace from received suffix removed)
 	-> catti server made reentrant (multiple users from different clients now possible)
 	-> adding paragraphs in textfield possible via shift+enter or dedicated button on transcription toolbar
 	
@@ -430,7 +430,7 @@ CHANGES AND BUGFIXES
 	-> support for 'Supplementary Characters' (5 digits) in virtual keyboard
 	-> bugfix: merge regions and lines is working again
 	-> bugfix: seldom PDF export bug fixed
-	-> included new la methods: ncsr (new), cvl & citlab (restricted accesss)
+	-> included new la methods: ncsr (new), cvl & citlab (restricted access)
 	-> Upload from private FTP: validation of directories now happens separately instead of during read process on server 
 	-> new 'div' tag
 	

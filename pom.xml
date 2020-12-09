@@ -459,7 +459,7 @@
 										  </else>
 										</if>
 										
-										<!-- Deploy mac packge -->
+										<!-- Deploy mac package -->
 										<if>
 										  <available file="@{dir}${deploySubDir}/mac" type="dir" />
 										  <then>
@@ -478,7 +478,7 @@
 										  </else>
 										</if>
 										
-										<!-- Deploy win64 packge -->
+										<!-- Deploy win64 package -->
 										<if>
 										  <available file="@{dir}${deploySubDir}/win64" type="dir" />
 										  <then>

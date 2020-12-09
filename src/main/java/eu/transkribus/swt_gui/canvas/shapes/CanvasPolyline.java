@@ -242,7 +242,7 @@ public class CanvasPolyline extends ACanvasShape<java.awt.Polygon> {
 	/** Returns a polyrectangle around this polyline with the distance DIST_CONTAINS_THRESHOLD to each line segment. <br>
 	 * type == 0 -> up and down segments are included
 	 * tpye == 1 / 2-> only up / down segments are included 
-	 *  @fixme Remove type paramter as by specifying distUp or distDown as 0 
+	 *  @fixme Remove type parameter as by specifying distUp or distDown as 0
 	 *  */
 	public CanvasPolygon getPolyRectangle(int distUp, int distDown, int type) {
 //		List<Point> pts = getPoints();

@@ -487,7 +487,7 @@ public class PortalWidget extends Composite {
 		Shell s = shells.get(pos);
 		if (s != null) {
 			for (Listener l : s.getListeners(SWT.Close)) 
-				s.removeListener(SWT.Close, l); // remove close event listener to prevent inifinte loop			
+				s.removeListener(SWT.Close, l); // remove close event listener to prevent infinite loop
 			s.close();
 			shells.remove(pos);
 		}

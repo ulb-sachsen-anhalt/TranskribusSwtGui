@@ -594,7 +594,7 @@ public class SWTCanvas extends Canvas {
 		// do centering of bounds if desired:
 		if (doCentering && true) {
 			if (!keepOriginalZoom || true) {
-				if (scaleToWidth) { // center image at height -> no xAlignment adjustement needed!
+				if (scaleToWidth) { // center image at height -> no xAlignment adjustment needed!
 					transformCopy.translate(-bounds.x, clientRect.height / sfY
 							/ (2.0f) - (bounds.y + bounds.height / 2.0f));
 				} else { // center image at width -> respect xAlignment parameter!
@@ -1540,7 +1540,7 @@ public class SWTCanvas extends Canvas {
 		
 		// set some offset depending on focused shape:
 		if (sel.getData() instanceof TrpTableCellType) {
-			// focus on baseline with greatest width in table cell or cell region itslef if no line present			
+			// focus on baseline with greatest width in table cell or cell region itself if no line present
 			ICanvasShape zoomShape = sel;
 			
 			Optional<ICanvasShape> max = sel.getChildren(false).stream().max(new Comparator<ICanvasShape>() {

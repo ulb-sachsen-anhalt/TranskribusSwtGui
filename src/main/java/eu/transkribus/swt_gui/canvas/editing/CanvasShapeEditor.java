@@ -160,7 +160,7 @@ public class CanvasShapeEditor {
 //		
 //		// Split all child shapes
 //		for (ICanvasShape child : children) {
-//			// Determine the parent shapes of the child shape that shall be splitted by iterating through the edit operations that were done so far
+//			// Determine the parent shapes of the child shape that shall be split by iterating through the edit operations that were done so far
 //			ICanvasShape p1=null, p2=null;
 //			for (ShapeEditOperation opParent : splitOps) {
 //				if (opParent.getNewShapes().get(0).equals(child.getParent()) 
@@ -181,7 +181,7 @@ public class CanvasShapeEditor {
 //		}
 //		
 //		if (splitOps.isEmpty()) {
-//			logger.warn("Cannot split - no shapes actually splitted by line!");
+//			logger.warn("Cannot split - no shapes actually split by line!");
 //			return null;
 //		}
 //		
@@ -667,7 +667,7 @@ public class CanvasShapeEditor {
 		for (int i=0; i<currentMoveOp.getShapes().size(); ++i) {
 			ICanvasShape s = currentMoveOp.getShapes().get(i);
 			
-			// reset points if this isnt the first move (translation is always specified global for one move to prevent rounding errors!)
+			// reset points if this isn't the first move (translation is always specified global for one move to prevent rounding errors!)
 //			if (!firstMove) {
 				ICanvasShape bs = currentMoveOp.getBackupShapes().get(i);
 				s.setPoints(bs.getPoints());
@@ -876,21 +876,21 @@ public class CanvasShapeEditor {
 				TrpTableCellType tc1 = (TrpTableCellType) s1.getData();
 				TrpTableCellType tc2 = (TrpTableCellType) s2.getData();
 				
-				// set span to 1 for left / upper part of splitted cell:
+				// set span to 1 for left / upper part of split cell:
 				int diff = 0;
 				if (tc1.getPos()[pi] < insertIndex)
 					diff = insertIndex-tc1.getPos()[pi];
 				
 				tc1.setSpan(pi, 1+diff);
 				
-				// set position to -1 for right / lower part of splitted cell (to correct it below!)
+				// set position to -1 for right / lower part of split cell (to correct it below!)
 				tc2.setPos(pi, -1);
 				tc2.setSpan(pi, tc2.getSpan()[pi]-diff);
 				
 	//			splitOp.addCellBackup(tc2);
 				logger.trace("tc2 = "+tc2);
 				
-	//			if (dir == SplitDirection.HORIZONAL) {
+	//			if (dir == SplitDirection.HORIZONTAL) {
 	//				tc2.setCol(-1);
 	//			} else {
 	//				tc2.setRow(-1);
@@ -957,7 +957,7 @@ public class CanvasShapeEditor {
 			splitOps.add(op);
 		}
 		else{
-			//means that parent was not able to be split and hence also no childs should be splitted
+			//means that parent was not able to be split and hence also no childs should be split
 			return null;
 			
 		}
@@ -965,7 +965,7 @@ public class CanvasShapeEditor {
 		// Split all child shapes
 		for (ICanvasShape child : children) {
 			//logger.debug("split ALL childs: " + child.getType());
-			// Determine the parent shapes of the child shape that shall be splitted by iterating through the edit operations that were done so far
+			// Determine the parent shapes of the child shape that shall be split by iterating through the edit operations that were done so far
 			ICanvasShape p1=null, p2=null;
 			for (ShapeEditOperation opParent : splitOps) {
 				if (opParent.getNewShapes().get(0).equals(child.getParent()) 
@@ -986,7 +986,7 @@ public class CanvasShapeEditor {
 		}
 		
 		if (splitOps.isEmpty()) {
-			logger.warn("Cannot split - no shapes actually splitted by line!");
+			logger.warn("Cannot split - no shapes actually split by line!");
 			return null;
 		}
 		
@@ -2038,10 +2038,10 @@ public class CanvasShapeEditor {
 				
 				String pStr() { return StringUtils.join(p, " "); }
 			}		
-			// the matrix of lists of points that will constitute the splitted cells 
+			// the matrix of lists of points that will constitute the split cells
 			Pt[][] pts = new Pt[tc.getRowSpan()+1][tc.getColSpan()+1];
 			
-			ShapeEditOperation op = new ShapeEditOperation(ShapeEditType.CUSTOM, "Splitted merged cell");
+			ShapeEditOperation op = new ShapeEditOperation(ShapeEditType.CUSTOM, "Split merged cell");
 			
 	//		List<ShapeEditOperation> ops = new ArrayList<>();
 			
@@ -2065,7 +2065,7 @@ public class CanvasShapeEditor {
 				int count=0;
 				
 				boolean isRightOrTopSide = s>1;
-				if (isRightOrTopSide) // for right or top side we have step trough neighbor cells in the opposite direction
+				if (isRightOrTopSide) // for right or top side we have step through neighbor cells in the opposite direction
 					Collections.reverse(ns);
 				
 				if (!ns.isEmpty()) {

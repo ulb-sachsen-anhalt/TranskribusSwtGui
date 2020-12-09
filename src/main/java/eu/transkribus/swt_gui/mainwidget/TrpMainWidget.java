@@ -6106,7 +6106,7 @@ public class TrpMainWidget {
 			logger.debug("clearing tags from selection!");
 			ATranscriptionWidget aw = ui.getSelectedTranscriptionWidget();
 			if (aw==null) {
-				logger.debug("no transcription widget selected - doin nothing!");
+				logger.debug("no transcription widget selected - doing nothing!");
 				return;
 			}
 			

@@ -122,7 +122,7 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 	 */
 	public synchronized void loadPage(String propertyName, Object value, boolean refreshFirst) {
 		if (propertyName == null || value == null) {
-			logger.error("propertyName or value is null - doin' nothin'!");
+			logger.error("propertyName or value is null - doing nothing!");
 			return;
 		}
 		PageableController c = pageableTable.getController();
@@ -220,7 +220,7 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 	 */
 	public synchronized void loadPage_useBinarySearch(String propertyName, Object value, boolean refreshFirst) {
 		if (propertyName == null || value == null) {
-			logger.error("propertyName or value is null - doin' nothin'!");
+			logger.error("propertyName or value is null - doing nothing!");
 			return;
 		}
 		PageableController c = pageableTable.getController();

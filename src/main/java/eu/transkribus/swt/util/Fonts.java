@@ -111,7 +111,7 @@ public class Fonts {
      * as possible from the provided swt <code>FontData</code>.
      * <p>Generally speaking, given a font size, an swt font will
      * display differently on the screen than the corresponding awt
-     * one. Because the SWT toolkit use native graphical ressources whenever
+     * one. Because the SWT toolkit use native graphical resources whenever
      * it is possible, this fact is platform dependent. To address
      * this issue, it is possible to enforce the method to return
      * an awt font with the same height as the swt one.
