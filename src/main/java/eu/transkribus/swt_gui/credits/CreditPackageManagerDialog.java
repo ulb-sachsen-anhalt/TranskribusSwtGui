@@ -23,10 +23,13 @@ import org.slf4j.LoggerFactory;
 
 import eu.transkribus.core.model.beans.TrpCreditPackage;
 import eu.transkribus.swt.util.Colors;
+import eu.transkribus.swt.util.DialogUtil;
 import eu.transkribus.swt_gui.mainwidget.storage.Storage;
 
 public class CreditPackageManagerDialog extends Dialog {
 	private static final Logger logger = LoggerFactory.getLogger(CreditPackageManagerDialog.class);
+
+	private static final int NUM_PACKAGES_MAX = 50;
 	
 	protected Composite dialogArea;
 	
@@ -115,7 +118,7 @@ public class CreditPackageManagerDialog extends Dialog {
 				int numPackages;
 				try {
 					numPackages = parseNumPackagesTxt();
-				} catch (NumberFormatException e) {
+				} catch (IllegalArgumentException e) {
 					errorLbl.setText(e.getMessage());
 					return;
 				}
@@ -135,7 +138,7 @@ public class CreditPackageManagerDialog extends Dialog {
 		int tmp;
 		try {
 			tmp = parseNumPackagesTxt();
-		} catch (NumberFormatException e) {
+		} catch (IllegalArgumentException e) {
 			errorLbl.setText(e.getMessage());
 			return;
 		}
@@ -144,10 +147,23 @@ public class CreditPackageManagerDialog extends Dialog {
 		if(creditValue <= 0.0) {
 			String amountError = "Nr. of Credits is too low";
 			errorLbl.setText(errorLbl.getText() + "," + amountError);
+			return;
 		}
 		logger.debug("okPressed: numPackages = {}, creditValue = {}", numPackages, creditValue);
-		// save input
-		super.okPressed();
+		
+		int answer = DialogUtil.showYesNoDialog(this.getParentShell(), 
+				"Please confirm your selection", 
+				"Package to split: " + creditPackage.getProduct().getLabel() +
+				"\nNr. of Packages to create: " + numPackages +
+				"\nCredits per package: " + creditValue
+			);
+		if(answer != SWT.YES) {
+			logger.debug("User did not confirm selection for splitting. Abort.");
+			return;
+		} else {
+			// save input
+			super.okPressed();
+		}
 	}
 	
 	public int getNumPackages() {
@@ -164,11 +180,19 @@ public class CreditPackageManagerDialog extends Dialog {
 	
 	private int parseNumPackagesTxt() throws NumberFormatException {
 		String numPackagesStr = splitNumPackagesTxt.getText();
+		final int numPackages;
 		try {
-			return Integer.parseInt(numPackagesStr);
+			numPackages = Integer.parseInt(numPackagesStr);
 		} catch (NumberFormatException e) {
 			throw new NumberFormatException("Nr. of packages is not a number: " + numPackagesStr);
 		}
+		if(numPackages > NUM_PACKAGES_MAX) {
+			throw new IllegalArgumentException("Nr. of packages exceeds the maximum of " + NUM_PACKAGES_MAX);
+		} 
+		if(numPackages > creditPackage.getBalance()) {
+			throw new IllegalArgumentException("Nr. of packages exceeds the balance.");
+		}
+		return numPackages;
 	}
 	
 	private void updateCostsTable() {
