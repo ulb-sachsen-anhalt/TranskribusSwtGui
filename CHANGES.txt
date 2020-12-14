@@ -727,5 +727,8 @@ CHANGES AND BUGFIXES
     -> bugfix: UI freezes when HTR model was set for a collection and then deleted in HTR config dialog
     -> moving multiple shapes via ctrl/cmd+drag
     -> Login with Google is no longer supported. You can log in to your account after setting a new password on our website, using your Google email address as username. See the Login Dialog for more information.
+    
+ 1.14.0:
+ 	-> bugfix: MacOS table redraw issue
 
 	

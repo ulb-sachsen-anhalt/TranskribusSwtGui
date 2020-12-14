@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.transkribus.core.util.CoreUtils;
+import eu.transkribus.swt.util.SWTUtil;
 import eu.transkribus.swt.util.TableViewerUtils;
 
 public abstract class ATableWidgetPagination<T> extends Composite {
@@ -340,6 +341,11 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 				PagingToolBarNavigationRendererFactory.getFactory(),
 				PageableTable.getDefaultPageRendererBottomFactory()
 				) {
+			@Override
+			public void refreshPage() {
+				super.refreshPage();
+				tv.getTable().redraw(); // have to redraw table after page refresh -> bug in MacOS
+			}
 			
 //			@Override protected Composite createCompositeTop(Composite parent) {
 //				final PageableController c = pageableTable.getController();
