@@ -21,15 +21,16 @@ public class TrpViewerFilterWidget extends Composite {
 	
 	protected StructuredViewer viewer;
 	protected TrpViewerFilter viewerFilter;
+	protected Label filterLabel;
 	protected Text filterTxt;
 
-	public TrpViewerFilterWidget(Composite parent, StructuredViewer viewer, int style, Class<?> filterTargetClass, String...fieldNames) {
-		super(parent, style);
+	public TrpViewerFilterWidget(Composite parent, StructuredViewer viewer, boolean withFilterLbl, Class<?> filterTargetClass, String...fieldNames) {
+		super(parent, 0);
 		this.viewer = viewer;
 		this.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		this.setLayout(createLayout());
 		
-		createCompositeArea();
+		createCompositeArea(withFilterLbl);
 		
 		//FIXME the filter should be replaced by a server API endpoint
 		
@@ -42,10 +43,12 @@ public class TrpViewerFilterWidget extends Composite {
 		attachFilter();
 	}
 	
-	protected void createCompositeArea() {
-		Label filterLabel = new Label(this, SWT.NONE);
-		filterLabel.setText("Search:");
-		filterLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
+	protected void createCompositeArea(boolean withFilterLbl) {
+		if (withFilterLbl) {
+			filterLabel = new Label(this, SWT.NONE);
+			filterLabel.setText("Search:");
+			filterLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
+		}
 		filterTxt = new Text(this, SWT.BORDER | SWT.SINGLE);
 		filterTxt.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		filterTxt.setMessage(FILTER_MESSAGE);
@@ -101,6 +104,10 @@ public class TrpViewerFilterWidget extends Composite {
 
 	public Text getFilterText() {
 		return filterTxt;
+	}
+	
+	public Label getFilterLabel() {
+		return filterLabel;
 	}
 	
 	public void reset() {

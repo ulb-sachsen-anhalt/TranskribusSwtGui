@@ -106,7 +106,7 @@ public abstract class APreviewListViewer<T> extends Composite {
 		tv.setContentProvider(new ArrayContentProvider());
 		
 		//have a filter for the doc title
-		docFilterWidget = new TrpViewerFilterWidget(mainContainer, tv, SWT.NONE, TrpDocMetadata.class, "title");
+		docFilterWidget = new TrpViewerFilterWidget(mainContainer, tv, false, TrpDocMetadata.class, "title");
 		
 		if (labelProvider!=null) {
 			tv.setLabelProvider(labelProvider);

@@ -37,7 +37,7 @@ public class UserAdminTableWidgetPagination extends ATableWidgetPagination<TrpUs
 	}
 	
 	protected TrpViewerFilterWidget createFilterWidget() {
-		TrpViewerFilterWidget filterComposite = new TrpViewerFilterWidget(this, getTableViewer(), SWT.NONE, TrpUser.class, "email") {
+		TrpViewerFilterWidget filterComposite = new TrpViewerFilterWidget(this, getTableViewer(), false, TrpUser.class, "email") {
 			@Override
 			protected void refreshViewer() {
 				logger.debug("refreshing viewer...");
@@ -47,7 +47,7 @@ public class UserAdminTableWidgetPagination extends ATableWidgetPagination<TrpUs
 			protected void attachFilter() {
 			}
 		};
-		filterComposite.getFilterText().setMessage("Email");
+		filterComposite.getFilterText().setMessage("Filter by Email");
 		filterComposite.getFilterText().setToolTipText("Filter users by email address");
 		filterComposite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		filterComposite.setLayout(new GridLayout(2, false));
