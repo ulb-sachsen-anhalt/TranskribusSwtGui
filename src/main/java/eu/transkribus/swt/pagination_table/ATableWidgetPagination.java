@@ -387,8 +387,6 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 						super.widgetSelected(e);
 					}
 				};				
-				
-				
 				pageSizeComboDecorator.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 				pageSizeComboDecorator.pageSizeChanged(initialPageSize, initialPageSize, getController());
 				
@@ -409,7 +407,7 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 						onReloadButtonPressed();
 					}
 				});
-				loadingComposite.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+				loadingComposite.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
 								
 				return bottom;
 			}

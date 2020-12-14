@@ -11,10 +11,13 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+
+import eu.transkribus.swt.util.SWTUtil;
 
 /**
  * This SWT {@link Composite} display a SWT {@link Combo} which is populate with
@@ -99,23 +102,11 @@ public class MyPageSizeComboRenderer extends
 
 	@Override
 	protected void createUI(Composite parent) {
-		GridLayout layout = new GridLayout(2, false);
-		layout.marginWidth = 0;
-		layout.marginHeight = 0;
-		this.setLayout(layout);
-
-//		itemsPerPageLabel = new Label(parent, SWT.NONE);
-//		itemsPerPageLabel.setText(Resources.getText(
-//				Resources.PaginationRenderer_itemsPerPage, getLocale()));
-//		itemsPerPageLabel.setLayoutData(new GridData());
-
+		parent.setLayout(new FillLayout());
 		comboViewer = new ComboViewer(parent, SWT.READ_ONLY);
 		comboViewer.setContentProvider(ArrayContentProvider.getInstance());
 		comboViewer.setLabelProvider(InternalLabelProvider.getInstance());
-		comboViewer.getCombo().setLayoutData(
-				new GridData(GridData.FILL_HORIZONTAL));
 		comboViewer.getCombo().addSelectionListener(this);
-
 	}
 
 	@Override
