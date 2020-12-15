@@ -31,13 +31,13 @@ This essentially means: every text line must have a parent region and each basel
 * A logged on user can load remote documents from the server using the "Documents" tab on the left, where all documents of the  user are listed
 * The "Structure" tab displays the hierarchical structure of the document. If you select an item there it will also be selected in the canvas. Currently the following information is displayed in different columns for each item: Type, Text, Structure type, ID and Coordinates. The user can edit the text and the structure type of each item in this view
 * Multiple selection in the structure view (and in the canvas) is done by holding the *ctrl* (strg) button and selecting/deselecting  the corresponding items
-*  Use the "Pages" tab to get a thumbnail overview of all pages. Doubleclick a thumbnail for opening the  corresponding page Canvas (the image area in the center): 
+*  Use the "Pages" tab to get a thumbnail overview of all pages. Double-click a thumbnail for opening the  corresponding page Canvas (the image area in the center):
 * Hold the *right* mouse button to drag the image
 * Press *escape* to enable the default selection mode at any time in the canvas (or select the default mouse cursor item in the canvas toolbar, i.e. the very first button therein)
 * Hold *shift* button to resize a shape according to its aspect ratio along its bounding rectangle  (which is drawn as a dashed-dotted line around the shape if its not rectangular itself!)
 ** this is especially useful when the shape is rectangular! 
 * Add a structure (Printspace, Region, Line, Baseline, Word) by pressing the corresponding button in the canvas toolbar (e.g. the W+ for adding a word). By default, new shapes are then added as rectangles, meaning you have to specify the upper left and lower right point of the new shape. If this mode is disabled, new shapes are added as polygons, point by point, and *enter* has to be pressed to finish a shape. Note that each new structure that demands a parent element (Line->Region, Baseline->Line, Word->Line) has to overlap its new parent structure during painting or the shape cannot be added!
-* Focus an element by double clicking its shape (or select it first and press the foucs icon in the toolbar!)
+* Focus an element by double clicking its shape (or select it first and press the focus icon in the toolbar!)
 * Splitting a shape can be done horizontally and vertically: select a shape to split, press the split icon and split the shape according to the drawn line
 * Merge two or more elements by multiselecting them (hold *ctrl* button while selecting!) and presssing the merge icon
 * Delete a shape by selecting one or more elements and pressing *del* (entf) or by hitting the icon in the toolbar (minus symbol over red disk)

@@ -101,7 +101,7 @@ final public class CanvasImage {
 			
 			imgIn.dispose();
 			
-			logger.info("--- memory usage after disposing orignal image ---");
+			logger.info("--- memory usage after disposing original image ---");
 			MemoryUsage.printMemoryUsage();
 			
 			this.img = imgScaled;

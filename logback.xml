@@ -7,7 +7,7 @@
 <!-- For professional support please see -->
 <!-- http://www.qos.ch/shop/products/professionalSupport -->
 
-<!-- DO NOT CHANGE THE APPENDER NAME (org.dea), ELSE THE APPLICATON WONT BE ABLE TO FIND THE LOGFILE FOR SENDING BUG REQUESTS
+<!-- DO NOT CHANGE THE APPENDER NAME (org.dea), ELSE THE APPLICATION WON'T BE ABLE TO FIND THE LOGFILE FOR SENDING BUG REQUESTS
  THE ONLY THING YOU MIGHT WANT TO CHANGE IS THE LOG LEVEL (INFO, DEBUG ...) -->
 <configuration>
 	<!-- Appenders: -->

@@ -6,7 +6,7 @@
     The key of every entry is the name of the tab that is added to the GUI. 
     The value of the entry is a list of unicode characters OR a valid unicode range in 4-digit hex-format 
     (i.e. 0080-00FF for Latin-1 supplement) - Note that both, a list of characters and multiple ranges, can be combined 
-    	into one keyboard by seperating the values with a whitespace!
+	into one keyboard by separating the values with a whitespace!
     The keyboards are sorted by their name in the GUI - add leading numbers to enforce a special order!
 </comment>
 <entry key="Custom">— ¬ ̄ U+00AD</entry>

@@ -223,7 +223,7 @@ public class MetadataTextFieldValidator<T> {
 		abstract String getValue();
 		
 		/**
-		 * In Windows checking String equality returns false for some HTR descriptions as they might contain carriage returns, while the other String doesn't altough (HTR object vs. text field value)
+		 * In Windows checking String equality returns false for some HTR descriptions as they might contain carriage returns, while the other String doesn't although (HTR object vs. text field value)
 		 * This is a quick fix just to make the dialog not moan about unsaved changes that do not exist...
 		 * 
 		 * @param value to check

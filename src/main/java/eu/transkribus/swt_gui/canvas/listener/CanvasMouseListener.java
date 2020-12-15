@@ -175,7 +175,7 @@ public class CanvasMouseListener implements MouseListener, MouseMoveListener, Mo
 		logger.debug("mouse down: "+e+" mode = "+canvas.getMode().toString()+" isMultiselect: "+isMultiselect);
 		canvas.setFocus();
 		
-		if  (e.count == 2) // doubleclick --> handled in mouseDoubleClick method
+		if  (e.count == 2) // double-click --> handled in mouseDoubleClick method
 			return;
 		
 		// update data:
@@ -431,7 +431,7 @@ public class CanvasMouseListener implements MouseListener, MouseMoveListener, Mo
 		boolean isMultiselect = CanvasKeys.isCtrlOrCommandKeyDown(e.stateMask);
 		logger.debug("mouse up: "+e+" hasMouseMoved: "+hasMouseMoved+" isMultiselect: "+isMultiselect);
 		
-		if  (e.count == 2) // doubleclick --> handled in mouseDoubleClick method
+		if  (e.count == 2) // double-click --> handled in mouseDoubleClick method
 			return;
 
 		MouseButtons button = MouseButtons.fromInt(e.button);
@@ -578,7 +578,7 @@ public class CanvasMouseListener implements MouseListener, MouseMoveListener, Mo
 		// jump out of the function in this case
 		Rectangle b = new Rectangle(0, 0, canvas.getBounds().width, canvas.getBounds().height);
 		if (b.contains(e.x, e.y)) {
-			logger.trace("exit pt is inside bounds - doin nothin!");
+			logger.trace("exit pt is inside bounds - doing nothing!");
 			return;
 		}
 		

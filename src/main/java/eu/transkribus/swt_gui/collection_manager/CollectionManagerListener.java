@@ -93,7 +93,7 @@ public class CollectionManagerListener implements IStorageListener, SelectionLis
 				duplicateDocument();
 			}
 		} catch (Throwable th) {
-			mw.onError("Unexpected error", "An unexpected error occured: "+th.getMessage(), th);
+			mw.onError("Unexpected error", "An unexpected error occurred: "+th.getMessage(), th);
 		}
 	}
 	

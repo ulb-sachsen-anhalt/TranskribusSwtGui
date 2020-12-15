@@ -666,7 +666,7 @@ public class CanvasQuadPolygon extends CanvasPolygon {
 //		// splits using them -> Polygons2D.intersection not needed here
 //		
 //		// try to find horizontal or vertical split points:
-//		SplitDirection dir = SplitDirection.HORIZONAL;
+//		SplitDirection dir = SplitDirection.HORIZONTAL;
 //		Pair<ShapePoint, ShapePoint> sp = this.computeSplitPoints(x1, y1, x2, y2, true, dir);
 //		if (sp == null) {
 //			dir = SplitDirection.VERTICAL;

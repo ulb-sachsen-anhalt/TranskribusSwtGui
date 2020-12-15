@@ -171,7 +171,7 @@ public class CustomTagPropertyTable extends Composite {
 					return;
 				}
 				String attName = getAttributeName(element);
-				logger.debug("setting attribute value, att = "+attName+" vaue = "+value);
+				logger.debug("setting attribute value, att = "+attName+" value = "+value);
 				try {
 					if (!StringUtils.isEmpty(attName)) {
 						// OLD VERSION: just apply for tag in this line:
