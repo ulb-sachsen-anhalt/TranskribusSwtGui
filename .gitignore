@@ -12,3 +12,4 @@ logs
 /bin/
 /loadThisDocOnStartup.txt
 /test/
+/.DS_Store

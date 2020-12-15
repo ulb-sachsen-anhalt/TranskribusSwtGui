@@ -184,7 +184,7 @@ public class HtrTrainingDialog extends Dialog {
 		treeViewerSelector = new DataSetSelectionSashForm(sash, SWT.HORIZONTAL, colId, docList);
 		treeViewerSelector.enableDebugDialog(this.enableDebugDialog);
 		
-		sash.setWeights(new int[] { 35, 65 });
+		sash.setWeights(new int[] { 40, 60 });
 		
 		updateUI();
 		
@@ -396,18 +396,23 @@ public class HtrTrainingDialog extends Dialog {
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
 		newShell.setText("HTR Training");
-		newShell.setMinimumSize(850, 600);
+		newShell.setMinimumSize(1000, 800);
 	}
 
 	@Override
 	protected Point getInitialSize() {
-		return new Point(1100, 768);
+		return new Point(1400, 1000);
 	}
 
 	@Override
 	protected void setShellStyle(int newShellStyle) {
 		super.setShellStyle(SWT.CLOSE | SWT.MAX | SWT.RESIZE | SWT.TITLE);
 		// setBlockOnOpen(false);
+	}
+	
+	@Override
+	protected void initializeBounds() {
+		SWTUtil.centerShell(getShell());
 	}
 
 	private void checkCitlabTrainingConfig() throws IOException {

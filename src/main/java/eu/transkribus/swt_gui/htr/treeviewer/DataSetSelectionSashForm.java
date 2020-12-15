@@ -131,7 +131,7 @@ public class DataSetSelectionSashForm extends SashForm implements IStorageListen
 		documentsTabItem = new CTabItem(dataTabFolder, SWT.NONE);
 		documentsTabItem.setText("Documents");
 		docTv = createDocumentTreeViewer(docTabComp);
-		docFilterWidget = new TrpViewerFilterWidget(docTabComp, docTv, SWT.NONE, TrpDocMetadata.class, "docId", "title");
+		docFilterWidget = new TrpViewerFilterWidget(docTabComp, docTv, false, TrpDocMetadata.class, "docId", "title");
 		documentsTabItem.setControl(docTabComp);
 
 		dataTabComp = new Composite(dataTabFolder, SWT.NONE);

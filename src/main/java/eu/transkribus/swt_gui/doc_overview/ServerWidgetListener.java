@@ -71,7 +71,7 @@ public class ServerWidgetListener extends SelectionAdapter implements Listener, 
 		dtv.getTable().addMouseTrackListener(this);
 		dtv.getTable().addKeyListener(this);
 		sw.htrTreeWidget.getTreeViewer().addDoubleClickListener(this);
-		sw.htrTreeWidget.getReloadButton().addSelectionListener(this);
+		SWTUtil.addSelectionListener(sw.htrTreeWidget.getReloadButton(), this);
 
 //		sw.collectionComboViewerWidget.collectionCombo.addSelectionListener(this);
 		sw.collectionSelectorWidget.addListener(SWT.Selection, this);
