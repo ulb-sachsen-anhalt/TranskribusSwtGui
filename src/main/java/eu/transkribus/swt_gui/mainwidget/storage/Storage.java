@@ -968,7 +968,7 @@ public class Storage {
 						deletedDocList.addAll(docs);
 					}
 										
-					logger.debug("async loaded "+deletedDocList.size()+" nr of deleted docs in collection "+collId+" thread: "+Thread.currentThread().getName());
+					logger.debug("async loaded "+deletedDocList.size()+" nr of deleted docs in collection "+colId+" thread: "+Thread.currentThread().getName());
 
 				}
 
@@ -2514,6 +2514,7 @@ public class Storage {
 
 	public TrpCollection getCollection(int colId) {
 		for (TrpCollection c : collections) {
+			//logger.debug("the collections in the storage: " + c.getColId());
 			if (c.getColId() == colId) {
 				return c;
 			}
