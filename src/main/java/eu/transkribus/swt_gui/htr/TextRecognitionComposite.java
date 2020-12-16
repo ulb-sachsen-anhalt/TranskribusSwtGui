@@ -88,7 +88,15 @@ public class TextRecognitionComposite extends Composite {
 		
 		Storage.getInstance().addListener(new IStorageListener() {
 			public void handleLoginOrLogout(LoginOrLogoutEvent arg) {
-				methodCombo.combo.setItems(Storage.getInstance().isAdminLoggedIn() ? METHODS_ADMIN : METHODS);
+				Storage store = Storage.getInstance();
+				boolean userAllowedForJob=false;
+				try {
+					userAllowedForJob = store.getConnection().isUserAllowedForJob(JobImpl.FinereaderOcrJob.toString());
+				} catch (Exception e) {
+					logger.error(e.getMessage(), e);
+				}
+				
+				methodCombo.combo.setItems(store.isAdminLoggedIn() || userAllowedForJob ? METHODS_ADMIN : METHODS);
 				methodCombo.combo.select(0);
 				updateGui();
 			}
