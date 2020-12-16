@@ -187,6 +187,10 @@ public class ServerWidgetListener extends SelectionAdapter implements Listener, 
 		TrpMainWidget mw = TrpMainWidget.getInstance();
 		if(e.isCollectionChange) {
 			logger.debug("Collection changed to ID = " + e.collId);
+			/*
+			 * so set this in the storage as well to omit to have different IDs here and in the storage
+			 */
+			
 			docListLoadEventCounter = 0;
 		}
 		logger.debug("Handling DocListLoadEvent #" + ++docListLoadEventCounter + " in collection " + e.collId + " sent by " + e.getSource());
@@ -377,10 +381,20 @@ public class ServerWidgetListener extends SelectionAdapter implements Listener, 
 			sw.docTableWidget.clearFilter();
 			
 			//switch collections and load documents from the server, which sends out DocListLoadEvent triggering UI updates in IStorageListener impls
+			
+			logger.debug("!reload the doc list with the new collection ID= "+sw.getSelectedCollectionId());
 			Future<List<TrpDocMetadata>> docs = TrpMainWidget.getInstance().reloadDocList(sw.getSelectedCollectionId());
 			
 			//unload currently loaded remote document (if any) on collection change
 			TrpMainWidget mw = TrpMainWidget.getInstance();
+			
+			/*
+			 * important!!
+			 * this way the DocTableWidgetPagination gets notified about the new collection ID of the changed collection
+			 * AND the further DocLoadEvents take the new ID as well 
+			 */
+			sw.refreshDocListFromStorage();
+			
 			if(mw.getStorage().isDocLoaded() && mw.getStorage().isRemoteDoc()) {
 				mw.closeCurrentDocument(false);
 			}
