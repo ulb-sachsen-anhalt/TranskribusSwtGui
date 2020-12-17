@@ -3,34 +3,31 @@ package eu.transkribus.swt_gui.htr.treeviewer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.ServerErrorException;
-import javax.xml.bind.JAXBException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.formula.functions.Columns;
 import org.eclipse.jface.viewers.AbstractTreeViewer;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewerColumn;
-import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.nebula.widgets.pagination.IPageLoader;
 import org.eclipse.nebula.widgets.pagination.collections.PageResult;
-import org.eclipse.nebula.widgets.pagination.table.SortTableColumnSelectionListener;
 import org.eclipse.nebula.widgets.pagination.tree.SortTreeColumnSelectionListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.TraverseEvent;
+import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
@@ -39,38 +36,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.transkribus.client.util.SessionExpiredException;
-import eu.transkribus.client.util.TrpClientErrorException;
-import eu.transkribus.client.util.TrpServerErrorException;
 import eu.transkribus.core.model.beans.GroundTruthSelectionDescriptor;
 import eu.transkribus.core.model.beans.ReleaseLevel;
 import eu.transkribus.core.model.beans.TrpCollection;
 import eu.transkribus.core.model.beans.TrpHtr;
-import eu.transkribus.core.model.beans.job.JobError;
-import eu.transkribus.core.model.beans.job.TrpJobStatus;
-import eu.transkribus.core.model.beans.rest.JobErrorList;
 import eu.transkribus.core.model.beans.rest.TrpHtrList;
 import eu.transkribus.core.util.HtrCITlabUtils;
 import eu.transkribus.core.util.HtrPyLaiaUtils;
-import eu.transkribus.core.util.JaxbUtils;
-import eu.transkribus.swt.pagination_table.ATableWidgetPagination;
 import eu.transkribus.swt.pagination_table.ATreeWidgetPagination;
 import eu.transkribus.swt.pagination_table.IPageLoadMethod;
-import eu.transkribus.swt.pagination_table.IPageLoadMethods;
-import eu.transkribus.swt.pagination_table.RemotePageLoader;
 import eu.transkribus.swt.pagination_table.RemotePageLoaderSingleRequest;
 import eu.transkribus.swt.util.DialogUtil;
-import eu.transkribus.swt.util.Images;
+import eu.transkribus.swt.util.SWTUtil;
 import eu.transkribus.swt_gui.dialogs.ChooseCollectionDialog;
 import eu.transkribus.swt_gui.htr.HtrFilterWithProviderWidget;
-import eu.transkribus.swt_gui.htr.HtrPagedTableWidget;
-import eu.transkribus.swt_gui.htr.HtrTableLabelProvider;
-import eu.transkribus.swt_gui.htr.HtrTreeLabelProvider;
 import eu.transkribus.swt_gui.htr.ShareHtrDialog;
 import eu.transkribus.swt_gui.htr.treeviewer.HtrGroundTruthContentProvider.HtrGtDataSet;
 import eu.transkribus.swt_gui.mainwidget.TrpMainWidget;
 import eu.transkribus.swt_gui.mainwidget.storage.Storage;
 import eu.transkribus.swt_gui.mainwidget.storage.StorageUtil;
 import eu.transkribus.swt_gui.structure_tree.StructureTreeWidget.ColConfig;
+import eu.transkribus.swt_gui.util.DelayedTask;
 
 public class HtrPagedTreeWidget extends ATreeWidgetPagination<TrpHtr> {
 	private static final Logger logger = LoggerFactory.getLogger(HtrPagedTreeWidget.class);
@@ -87,15 +73,14 @@ public class HtrPagedTreeWidget extends ATreeWidgetPagination<TrpHtr> {
 	public final static ColConfig[] COLUMNS = new ColConfig[] { NAME_COL, SIZE_COL, CURATOR_COL, ID_COL, WORD_COL, DATE_COL };
 	
 	// filter:
-	Composite filterAndReloadComp;
 	HtrFilterWithProviderWidget filterComposite;
-	Button reloadBtn;
 	private final String providerFilter;
 	
 	Menu contextMenu;
 	
 	public HtrPagedTreeWidget(Composite parent, int style, String providerFilter, ITreeContentProvider contentProvider, CellLabelProvider labelProvider) {
-		super(parent, style, 40, contentProvider, labelProvider);
+		super(parent, style, 40, null, true, contentProvider, labelProvider);
+//		super(parent, style, 40, contentProvider, labelProvider);
 		
 		if(providerFilter != null && !Arrays.stream(providerValues).anyMatch(s -> s.equals(providerFilter))) {
 			throw new IllegalArgumentException("Invalid providerFilter value");
@@ -111,13 +96,13 @@ public class HtrPagedTreeWidget extends ATreeWidgetPagination<TrpHtr> {
 		
 		addFilter();
 		
-		Listener filterModifyListener = new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				loadFirstPage();
-			}
-		};
-		this.addListener(SWT.Modify, filterModifyListener);
+//		Listener filterModifyListener = new Listener() {
+//			@Override
+//			public void handleEvent(Event event) {
+//				loadFirstPage();
+//			}
+//		};
+//		this.addListener(SWT.Modify, filterModifyListener);
 
 		initListener();
 	}
@@ -130,12 +115,7 @@ public class HtrPagedTreeWidget extends ATreeWidgetPagination<TrpHtr> {
 	}
 	
 	private void addFilter() {
-		filterAndReloadComp = new Composite(this, SWT.NONE);
-		filterAndReloadComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		filterAndReloadComp.setLayout(new GridLayout(2, false));
-		filterAndReloadComp.moveAbove(null);
-		
-		filterComposite = new HtrFilterWithProviderWidget(filterAndReloadComp, getTreeViewer(), providerFilter, SWT.NONE) {
+		filterComposite = new HtrFilterWithProviderWidget(this, getTreeViewer(), providerFilter, SWT.NONE) {
 			@Override
 			protected void refreshViewer() {
 				logger.debug("refreshing viewer...");
@@ -144,21 +124,40 @@ public class HtrPagedTreeWidget extends ATreeWidgetPagination<TrpHtr> {
 			@Override
 			protected void attachFilter() {
 			}
-		};	
+		};
+		filterComposite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		filterComposite.getFilterText().setParent(SWTUtil.dummyShell);
+		filterComposite.layout();
+		filterComposite.moveAbove(null);
 		
-		this.reloadBtn = new Button(filterAndReloadComp, SWT.PUSH);
-		reloadBtn.setToolTipText("Reload current tree page");
-		reloadBtn.setImage(Images.getOrLoad("/icons/refresh.gif"));
-		reloadBtn.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, true));
-		filterAndReloadComp.moveAbove(getTreeViewer().getTree());
+		filterComposite.getProviderCombo().addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent arg0) {
+				loadFirstPage();
+			}
+		});
+		
+		ModifyListener filterModifyListener = new ModifyListener() {
+			DelayedTask dt = new DelayedTask(() -> { 
+				loadFirstPage();
+			}, true);
+			@Override public void modifyText(ModifyEvent e) {
+				dt.start();
+			}
+		};
+		filter.addModifyListener(filterModifyListener);
+		filter.addTraverseListener(new TraverseListener() {
+			@Override
+			public void keyTraversed(TraverseEvent event) {
+				if (event.detail == SWT.TRAVERSE_RETURN) {
+					loadFirstPage();
+				}
+			}
+		});
 	}
 	
 	void resetProviderFilter() {
 		filterComposite.resetProviderFilter();
-	}
-
-	public Button getReloadButton() {
-		return reloadBtn;
 	}
 	
 	public String getProviderComboValue() {
@@ -225,13 +224,15 @@ public class HtrPagedTreeWidget extends ATreeWidgetPagination<TrpHtr> {
 						if (store.isAdminLoggedIn() && releaseLevel == null){
 							collId = null;
 						}
+						
+						String filterTxt = filter.getText();
 					
-						logger.debug("load HTRs from DB with filter: " + filterComposite.getFilterText().getText());
+						logger.debug("load HTRs from DB with filter: " + filterTxt);
 						logger.debug("providerFilter: " + getProviderComboValue());
 						logger.debug("linkage filter: " + filterComposite.getLinkageFilterComboText());
 						logger.debug("htr release is : " + releaseLevel);
 						
-						l = store.getConnection().getHtrsSync(collId, getProviderComboValue(), filterComposite.getFilterText().getText(), releaseLevel, fromIndex, toIndex-fromIndex, sortPropertyName, sortDirection);
+						l = store.getConnection().getHtrsSync(collId, getProviderComboValue(), filterTxt, releaseLevel, fromIndex, toIndex-fromIndex, sortPropertyName, sortDirection);
 						if (l.getList()== null){
 							logger.debug("the result list is null - no htr match the search string");
 							//if we set not this the old entries persist in the table!!

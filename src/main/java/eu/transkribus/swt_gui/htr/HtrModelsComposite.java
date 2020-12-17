@@ -35,6 +35,7 @@ import eu.transkribus.core.model.beans.TrpCollection;
 import eu.transkribus.core.model.beans.TrpHtr;
 import eu.transkribus.core.model.beans.rest.TrpHtrList;
 import eu.transkribus.swt.util.DialogUtil;
+import eu.transkribus.swt.util.SWTUtil;
 import eu.transkribus.swt_gui.dialogs.ChooseCollectionDialog;
 import eu.transkribus.swt_gui.mainwidget.storage.IStorageListener;
 import eu.transkribus.swt_gui.mainwidget.storage.Storage;
@@ -131,12 +132,8 @@ public class HtrModelsComposite extends Composite implements IStorageListener {
 		};
 		htw.addListener(SWT.Modify, filterModifyListener);
 		
-		htw.getReloadButton().addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				htw.refreshPage(false);
-				//store.reloadHtrs();
-			}
+		SWTUtil.onSelectionEvent(htw.getReloadButton(), e -> {
+			htw.refreshPage(false);
 		});
 		
 		shareToCollectionItem.addSelectionListener(new SelectionAdapter() {

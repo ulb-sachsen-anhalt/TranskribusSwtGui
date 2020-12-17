@@ -29,10 +29,9 @@ public class LabelToolItem extends ACustomToolItem {
 		label = new CLabel(parent, controlStyle);
 //		label = new Label(parent, controlStyle);
 
-		FontData[] fD = label.getFont().getFontData();
-		fD[0].setHeight(DEFAULT_FONT_SIZE);
-//		label.setFont(new Font(display,fD[0]));
-		label.setFont(Fonts.createFont(fD[0]));
+//		FontData[] fD = label.getFont().getFontData();
+//		fD[0].setHeight(DEFAULT_FONT_SIZE);
+//		label.setFont(Fonts.createFont(fD[0]));
 		
 		this.setControl(label);
 	}

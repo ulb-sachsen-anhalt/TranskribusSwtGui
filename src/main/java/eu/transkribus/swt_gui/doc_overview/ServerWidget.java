@@ -434,14 +434,13 @@ public class ServerWidget extends Composite {
 		documentsTabItem.setControl(remoteDocsGroup);
 		tabFolder.setSelection(documentsTabItem);
 		
-		
-		Composite docsContainer = new Composite(remoteDocsGroup, 0);
-		docsContainer.setLayoutData(new GridData(GridData.FILL_BOTH));
-		docsContainer.setLayout(new GridLayout(2, false));
-		docsContainer.setLayout(SWTUtil.createGridLayout(1, false, 0, 0));
+//		Composite docsContainer = new Composite(remoteDocsGroup, 0);
+//		docsContainer.setLayoutData(new GridData(GridData.FILL_BOTH));
+//		docsContainer.setLayout(new GridLayout(2, false));
+//		docsContainer.setLayout(SWTUtil.createGridLayout(1, false, 0, 0));
 
-		docTableWidget = new DocTableWidgetPagination(docsContainer, SWT.MULTI, 100, false);
-		docTableWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+		docTableWidget = new DocTableWidgetPagination(remoteDocsGroup, SWT.MULTI, 100, false);
+		docTableWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		userControls.add(docTableWidget);
 		
 		ColumnViewerToolTipSupport.enableFor(docTableWidget.getPageableTable().getViewer(), ToolTip.NO_RECREATE);
@@ -513,6 +512,8 @@ public class ServerWidget extends Composite {
 		if (remoteDocsGroup instanceof SashForm) {
 			((SashForm)remoteDocsGroup).setWeights(new int[]{50, 50});
 		}
+		
+		remoteDocsGroup.layout();
 		
 		/*
 		 * Create ground truth treeviewer. 

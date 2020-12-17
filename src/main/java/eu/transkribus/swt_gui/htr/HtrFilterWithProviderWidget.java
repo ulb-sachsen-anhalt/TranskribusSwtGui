@@ -2,6 +2,8 @@ package eu.transkribus.swt_gui.htr;
 
 import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -17,13 +19,13 @@ public class HtrFilterWithProviderWidget extends HtrFilterWidget {
 	public HtrFilterWithProviderWidget(Composite parent, StructuredViewer viewer, final String htrProviderFilterValue, int style) {
 		super(parent, viewer, style);
 		
-		Label providerLabel = new Label(this, SWT.NONE);
-		providerLabel.setText("Technology:");
-		providerLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
+//		Label providerLabel = new Label(this, SWT.NONE);
+//		providerLabel.setText("Technology:");
+//		providerLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
 		providerCombo = new Combo(this, SWT.READ_ONLY);
 		
 		if(htrProviderFilterValue == null) {
-			addProviderFilter(providerCombo, "Show all", null);
+			addProviderFilter(providerCombo, "All engines", null);
 			for (String p : HtrTableWidget.providerValues) {
 				addProviderFilter(providerCombo, HtrTableLabelProvider.getLabelForHtrProvider(p), p);
 			}
@@ -35,7 +37,7 @@ public class HtrFilterWithProviderWidget extends HtrFilterWidget {
 		
 		//filtering by provider is done in Storage and that's why the listener is attached in the outer Composite
 		providerCombo.select(0);
-		providerCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));		
+		providerCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 	}
 	
 	@Override

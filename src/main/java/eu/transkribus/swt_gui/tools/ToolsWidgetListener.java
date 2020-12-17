@@ -493,6 +493,13 @@ public class ToolsWidgetListener implements SelectionListener, IStorageListener 
 						DialogUtil.showErrorMessageBox(tw.getShell(), "No model selected", "Please select a base model for Text2Image");
 						return;
 					}
+					
+					String msg = (conf.isDocsSelection && conf.docsSelected != null && Storage.getInstance().isAdminLoggedIn()) ? "Do you really want to start t2i for "+ conf.docsSelected.size() + " docs in this collection?" : "Do you really want to start t2i for all selected page(s)?";
+					
+					if (DialogUtil.showYesNoDialog(mw.getShell(), "t2i confirmation message", msg)!=SWT.YES) {
+						return;	}
+					
+					
 					ParameterMap pm = new ParameterMap();
 					pm.addIntParam(JobConst.PROP_MODEL_ID, htr.getHtrId());
 					pm.addBoolParam(JobConst.PROP_PERFORM_LAYOUT_ANALYSIS, conf.performLa);
@@ -517,7 +524,22 @@ public class ToolsWidgetListener implements SelectionListener, IStorageListener 
 						pm.addParameter(JobConst.PROP_EDIT_STATUS, conf.editStatus.getStr());
 					}
 					
-					if (!conf.currentTranscript) {
+					if (conf.isDocsSelection && conf.docsSelected != null && Storage.getInstance().isAdminLoggedIn()){
+						// NEW
+						for (DocSelection docSel : conf.docsSelected){
+							logger.debug("start ti2 for doc: " + docSel.getDocId());
+							List<DocumentSelectionDescriptor> dsds = new ArrayList<>();
+							// as t2i call does not support specifying a docId & pagesStr (TODO!) we have to get the pageIds from the server to construct a DSD object
+							DocumentSelectionDescriptor dsd = store.getDocumentSelectionDescriptor(colId, docSel);
+							logger.debug("nr of pages in t2i descriptor: "+dsd.getPages().size());
+							dsds.add(dsd);
+							//TODO: check if it starts t2i properly
+							List<String> tmp = store.analyzeLayoutOnDocumentSelectionDescriptor(dsds, true, true, false, false, false, jobImpl, pm);
+							jobIds.addAll(tmp);							
+						}	
+					}
+					
+					else if (!conf.currentTranscript) {
 						logger.debug("t2i on pages: " + conf.pagesStr);
 						jobIds = store.analyzeLayoutOnLatestTranscriptOfPages(conf.pagesStr, true, true, false, false, false, jobImpl, pm);
 					} else {
@@ -696,19 +718,43 @@ public class ToolsWidgetListener implements SelectionListener, IStorageListener 
 					int ret = od.open();
 
 					if (ret == IDialogConstants.OK_ID) {
-						final String pageStr = od.getPages();
+						final String pages;
 						final OcrConfig config = od.getConfig();
+						String msg;						
 						
-						String msg = "Do you really want to start the OCR for page(s) " + pageStr + "  ?";
+						final boolean isDocsSelection = od.isDocsSelection() && od.getDocs() != null && Storage.getInstance().isAdminLoggedIn();
+						if (isDocsSelection) {
+							pages = null;
+							msg = "Do you really want to start the OCR for "+ od.getDocs().size() + " docs in this collection?";
+						} else {
+							pages = od.getPages();
+							msg = "Do you really want to start the HTR for page(s) " + pages + " ?";
+						}
+
 						if (DialogUtil.showYesNoDialog(mw.getShell(), "Optical Character Recognition", msg)!=SWT.YES) {
 							od = null;
 							return;
 						}
 						
-						logger.info("starting ocr for doc " + store.getDocId() + ", pages " + pageStr + " and col "
-								+ colId);
-						String jobId = store.runOcr(colId, store.getDocId(), pageStr, config);
-						jobIds.add(jobId);
+						if (isDocsSelection){
+							// NEW: use DocSelection here, as they contain the pages string for each doc:
+							for (DocSelection docSel : od.getDocs()) {
+								//DocumentSelectionDescriptor dsd = store.getDocumentSelectionDescriptor(colId, docSel);
+								//logger.debug("dsd = "+dsd);								
+								logger.info("starting ocr for doc " + docSel.getDocId() + ", pages " + docSel.getPages() + " and col "
+										+ colId);
+								String jobId = store.runOcr(colId, docSel.getDocId(), docSel.getPages(), config);
+								jobIds.add(jobId);
+							}
+
+						} else {
+							logger.info("starting ocr for doc " + store.getDocId() + ", pages " + pages + " and col "
+									+ colId);
+							String jobId = store.runOcr(colId, store.getDocId(), pages, config);
+							jobIds.add(jobId);
+						}
+						
+
 					}
 					od = null;
 				}

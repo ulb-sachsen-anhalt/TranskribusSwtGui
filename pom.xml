@@ -4,7 +4,7 @@
 	<groupId>eu.transkribus</groupId>
 	<artifactId>TranskribusSwtGui</artifactId>
 	<packaging>jar</packaging>
-	<version>1.13.0</version>
+	<version>1.13.1</version>
 	<name>Transkribus</name>
 
 	<properties>
@@ -35,7 +35,7 @@
 <!-- 		<jface.version>3.7.1.v20120104-1859</jface.version> -->
 <!-- 		<jface.artifactId>org.eclipse.ui.workbench</jface.artifactId> -->
 		
-		<client.version>0.3.4</client.version>
+		<client.version>0.3.5</client.version>
 	</properties>
 
 	<distributionManagement>
@@ -956,11 +956,10 @@
 	</dependencies>
 
 	<repositories>
-		<!-- dea artifactory: -->		
 		<repository>
-			<id>dea-artifactory</id>
-			<name>dea-artifactory-releases</name>
-			<url>https://dbis-halvar.uibk.ac.at/artifactory/libs-release/</url>
+			<id>transkribus-artifactory</id>
+			<name>transkribus-artifactory-releases</name>
+			<url>https://transkribus.eu/artifactory/libs-release/</url>
 		</repository>
 		<repository>
 			<id>maven2-repository.dev.java.net</id>

@@ -13,6 +13,10 @@ import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.nebula.widgets.pagination.IPageLoader;
 import org.eclipse.nebula.widgets.pagination.collections.PageResult;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.TraverseEvent;
+import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -40,8 +44,10 @@ import eu.transkribus.swt.pagination_table.IPageLoadMethods;
 import eu.transkribus.swt.pagination_table.RemotePageLoader;
 import eu.transkribus.swt.pagination_table.RemotePageLoaderSingleRequest;
 import eu.transkribus.swt.util.Images;
+import eu.transkribus.swt.util.SWTUtil;
 import eu.transkribus.swt_gui.mainwidget.TrpMainWidget;
 import eu.transkribus.swt_gui.mainwidget.storage.Storage;
+import eu.transkribus.swt_gui.util.DelayedTask;
 
 public class HtrPagedTableWidget extends ATableWidgetPagination<TrpHtr> {
 	private static final Logger logger = LoggerFactory.getLogger(HtrPagedTableWidget.class);
@@ -58,13 +64,11 @@ public class HtrPagedTableWidget extends ATableWidgetPagination<TrpHtr> {
 	//public static final String HTR_CER_COL = "CER";
 	
 	// filter:
-	Composite filterAndReloadComp;
 	HtrFilterWithProviderWidget filterComposite;
-	Button reloadBtn;
 	private final String providerFilter;
 	
 	public HtrPagedTableWidget(Composite parent, int style, String providerFilter) {
-		super(parent, style, 25);
+		super(parent, style, 25, null, true);
 		
 		if(providerFilter != null && !Arrays.stream(providerValues).anyMatch(s -> s.equals(providerFilter))) {
 			throw new IllegalArgumentException("Invalid providerFilter value");
@@ -83,12 +87,7 @@ public class HtrPagedTableWidget extends ATableWidgetPagination<TrpHtr> {
 	}
 	
 	private void addFilter() {
-		filterAndReloadComp = new Composite(this, SWT.NONE);
-		filterAndReloadComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		filterAndReloadComp.setLayout(new GridLayout(2, false));
-		filterAndReloadComp.moveAbove(null);
-		
-		filterComposite = new HtrFilterWithProviderWidget(filterAndReloadComp, getTableViewer(), providerFilter, SWT.NONE) {
+		filterComposite = new HtrFilterWithProviderWidget(this, getTableViewer(), providerFilter, SWT.NONE) {
 			@Override
 			protected void refreshViewer() {
 				logger.debug("refreshing viewer...");
@@ -97,21 +96,40 @@ public class HtrPagedTableWidget extends ATableWidgetPagination<TrpHtr> {
 			@Override
 			protected void attachFilter() {
 			}
-		};	
+		};
+		filterComposite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		filterComposite.getFilterText().setParent(SWTUtil.dummyShell);
+		filterComposite.layout();
+		filterComposite.moveAbove(null);
 		
-		this.reloadBtn = new Button(filterAndReloadComp, SWT.PUSH);
-		reloadBtn.setToolTipText("Reload current page");
-		reloadBtn.setImage(Images.getOrLoad("/icons/refresh.gif"));
-		reloadBtn.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, true));
-		filterAndReloadComp.moveAbove(getTableViewer().getTable());
+		filterComposite.getProviderCombo().addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent arg0) {
+				refreshPage(true);
+			}
+		});
+		
+		ModifyListener filterModifyListener = new ModifyListener() {
+			DelayedTask dt = new DelayedTask(() -> { 
+				refreshPage(true);
+			}, true);
+			@Override public void modifyText(ModifyEvent e) {
+				dt.start();
+			}
+		};
+		filter.addModifyListener(filterModifyListener);
+		filter.addTraverseListener(new TraverseListener() {
+			@Override
+			public void keyTraversed(TraverseEvent event) {
+				if (event.detail == SWT.TRAVERSE_RETURN) {
+					refreshPage(true);
+				}
+			}
+		});
 	}
 	
 	void resetProviderFilter() {
 		filterComposite.resetProviderFilter();
-	}
-
-	public Button getReloadButton() {
-		return reloadBtn;
 	}
 	
 	public String getProviderComboValue() {
@@ -174,12 +192,13 @@ public class HtrPagedTableWidget extends ATableWidgetPagination<TrpHtr> {
 							collId = null;
 						}
 					
-						logger.debug("load HTRs from DB with filter: " + filterComposite.getFilterText().getText());
+						String filterTxt = filter.getText();
+						logger.debug("load HTRs from DB with filter: " + filterTxt);
 						logger.debug("providerFilter: " + getProviderComboValue());
 						logger.debug("linkage filter: " + filterComposite.getLinkageFilterComboText());
 						logger.debug("htr release is : " + releaseLevel);
 						
-						l = store.getConnection().getHtrsSync(collId, getProviderComboValue(), filterComposite.getFilterText().getText(), releaseLevel, fromIndex, toIndex-fromIndex, sortPropertyName, sortDirection);
+						l = store.getConnection().getHtrsSync(collId, getProviderComboValue(), filterTxt, releaseLevel, fromIndex, toIndex-fromIndex, sortPropertyName, sortDirection);
 						if (l.getList()== null){
 							logger.debug("the result list is null - no htr match the search string");
 							//if we set not this the old entries persist in the table!!
