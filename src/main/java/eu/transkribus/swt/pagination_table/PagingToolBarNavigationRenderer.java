@@ -75,6 +75,14 @@ public class PagingToolBarNavigationRenderer extends AbstractPageControllerCompo
 			tb.getLabelItem().setText(""+nStart+"-"+nEnd+" / "+c.getTotalElements()+" ");
 			tb.setCurrentPageValue((c.getCurrentPage()+1)+"");
 			tb.setNPagesValue(c.getTotalPages()+"");
+			// this was needed for the DocTableWidget:
+			tb.getToolBar().pack();
+			if (tb.getToolBar().getParent()!=null) {
+				tb.getToolBar().getParent().layout(true);
+				if (tb.getToolBar().getParent().getParent()!=null) {
+					tb.getToolBar().getParent().getParent().layout(true);
+				}
+			}
 		});
 		
 //		PageableController c = getController();
