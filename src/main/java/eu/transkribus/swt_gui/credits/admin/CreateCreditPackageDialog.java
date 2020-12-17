@@ -21,6 +21,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.TrpNumberTextComposite;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import eu.transkribus.core.model.beans.TrpCreditPackage;
 import eu.transkribus.core.model.beans.TrpCreditProduct;
@@ -34,6 +36,8 @@ import eu.transkribus.swt_gui.mainwidget.storage.Storage;
 import eu.transkribus.swt_gui.pagination_tables.CreditProductsPagedTableWidget;
 
 public class CreateCreditPackageDialog extends Dialog {
+	private static final Logger logger = LoggerFactory.getLogger(CreateCreditPackageDialog.class);
+	
 	protected Composite dialogArea;
 	
 	protected CTabFolder tabFolder;
@@ -206,7 +210,20 @@ public class CreateCreditPackageDialog extends Dialog {
 		packageToCreate.setUserId(selectedOwner.getUserId());
 		packageToCreate.setUserName(selectedOwner.getUserName());
 		packageToCreate.setProduct(product);
-		super.okPressed();
+		
+		String msg =  "Are you sure you want to create the following credit package?\n";
+		msg += "\nProduct name: " + product.getLabel();
+		msg += "\nOwner: " + packageToCreate.getUserName();
+		msg += "\nNr. of Credits: " + product.getNrOfCredits();
+		msg += "\nShareable: " + product.getShareable();
+		msg += "\nExpires: " + (packageToCreate.getExpirationDate() == null ? "Never" : packageToCreate.getExpirationDate());
+		int answer = DialogUtil.showYesNoDialog(this.getParentShell(), "Please confirm your selection", msg);
+		if(answer != SWT.YES) {
+			logger.debug("Admin declined creating credit package: {}", packageToCreate);
+			return;
+		} else {
+			super.okPressed();
+		}
 	}
 	
 	protected TrpCreditPackage getPackageToCreate() {
