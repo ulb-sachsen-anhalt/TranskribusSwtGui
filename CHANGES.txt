@@ -730,6 +730,7 @@ CHANGES AND BUGFIXES
     
  1.13.1:
  	-> bugfix: MacOS table redraw issue
+ 	-> (minor) bugfixes for MacOS: invisible Doc-ID text field and size of paging text fields
  	-> fixed credit manager usability Issues with Splitting Packages 
  	-> bugfix: change of collection did not work on first try
 	-> remove OCR option for unauthorized users
