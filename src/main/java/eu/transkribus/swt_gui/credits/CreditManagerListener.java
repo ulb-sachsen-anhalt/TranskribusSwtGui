@@ -17,6 +17,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSourceEvent;
@@ -36,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import eu.transkribus.client.util.SessionExpiredException;
 import eu.transkribus.client.util.TrpClientErrorException;
 import eu.transkribus.client.util.TrpServerErrorException;
+import eu.transkribus.core.model.beans.TrpCollection;
 import eu.transkribus.core.model.beans.TrpCreditPackage;
 import eu.transkribus.core.model.beans.job.TrpJobStatus;
 import eu.transkribus.swt.progress.ProgressBarDialog;
@@ -66,7 +68,7 @@ public class CreditManagerListener implements IStorageListener {
 		SWTUtil.setTabFolderBoldOnItemSelection(view.tabFolder);
 		SWTUtil.onSelectionEvent(view.addToCollectionBtn, (e) -> {
 			List<TrpCreditPackage> packageList = view.userCreditsTable.getSelected();
-			assignPackagesToCollection(view.getCollection().getColId(), packageList);
+			assignPackagesToCollection(view.getCollection(), packageList);
 		});
 		
 		SWTUtil.onSelectionEvent(view.removeFromCollectionBtn, (e) -> {
@@ -139,25 +141,49 @@ public class CreditManagerListener implements IStorageListener {
 		});
 	}
 
-	private void assignPackagesToCollection(int collId, List<TrpCreditPackage> packageList) {
+	private void assignPackagesToCollection(TrpCollection collection, List<TrpCreditPackage> packageList) {
 		if(CollectionUtils.isEmpty(packageList)) {
 			return;
 		}
+		
+		List<TrpCreditPackage> packagesToShare = packageList.stream()
+				.filter(p -> p.getProduct().getShareable())
+				.collect(Collectors.toList());
+		
+
+		// error if packagesToShare is empty
+		if(packagesToShare.isEmpty()) {
+			view.dialogArea.getDisplay().asyncExec(new Runnable() {
+				public void run() {
+					DialogUtil.showBalloonToolTip(view.userCreditsTable, null, "No packages assigned", "Your selection does not contain any shareable packages.");
+				}
+			});
+			return;
+		}
+		
+		//show confirmation dialog & also inform about non-shareable packages in the selection
+		String confirmMsg = "Do you really want to share " + packagesToShare.size() + " package(s) in the collection '" + collection.getColName() + "'?";
+		
+		//generate message about skipped packages
+		final int nrOfSkippedPackages = packageList.size() - packagesToShare.size();
+		if(nrOfSkippedPackages > 0) {
+			confirmMsg += "\n\n(" + nrOfSkippedPackages + " non-shareable package(s) skipped)";
+		}
+		
+		int answer = DialogUtil.showYesNoDialog(view.getShell(), "Please confirm your selection", confirmMsg);
+		if(answer != SWT.YES) {
+			logger.debug("User declined sharing packages.");
+			return;
+		}
+			
+		// go on with packagesToShare
 		int addCount = 0;
 		int notModifiedCount = 0;
 		final List<Exception> fails = new ArrayList<>(0);
-		List<String> nonShareableErrorMsgList = new ArrayList<>(0);
-		for(TrpCreditPackage p : packageList) {
-			if(!p.getProduct().getShareable()) {
-				final String msg = "'" + p.getProduct().getLabel() + "' packages are not shareable.";
-				if(!nonShareableErrorMsgList.contains(msg)) {
-					nonShareableErrorMsgList.add(msg);
-				}
-				//do not attempt to add. the server would respond with status 400 on this.
-				continue;
-			}
+		
+		for(TrpCreditPackage p : packagesToShare) {
 			try {
-				store.getConnection().getCreditCalls().addCreditPackageToCollection(view.getCollection().getColId(), p.getPackageId());
+				store.getConnection().getCreditCalls().addCreditPackageToCollection(collection.getColId(), p.getPackageId());
 				addCount++;
 			} catch (IllegalStateException ise) {
 				//Client currently maps "304 - Not modified" to an IllegalStateException. The package was already assigned to this collection.
@@ -170,14 +196,15 @@ public class CreditManagerListener implements IStorageListener {
 				fails.add(e2);
 			}
 		}
-		final String balloonMsgTitle = addCount + "/" + packageList.size() + " packages assigned";
+		final String balloonMsgTitle = addCount + "/" + packagesToShare.size() + " packages assigned";
 		String msg = "";
 		if(notModifiedCount > 0) {
 			msg += notModifiedCount + " already assigned\n";
 		}
-		if(nonShareableErrorMsgList.size() > 0) {
-			msg += nonShareableErrorMsgList.stream().collect(Collectors.joining("\n")) + "\n";
-		}
+		// the user is now informed about skipped packages in the confirmation dialog. Activate this to add a message also in the balloon tip.
+//		if(nrOfSkippedPackages > 0) {
+//			msg += nrOfSkippedPackages + " packages in the selection are not shareable.\n";
+//		}
 		if(fails.size() > 0) {
 			msg += fails.size() + " errors occurred";
 		}
