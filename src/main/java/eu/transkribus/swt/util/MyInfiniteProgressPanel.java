@@ -370,7 +370,7 @@ public class MyInfiniteProgressPanel {
 	 * has been declared, returns null.
 	 * 
 	 * @param shell the shell for which we are trying to get the associated
-	 *            progess panel
+	 *            progress panel
 	 * @return the progress panel associated to shell, or null if there is no
 	 *         progress panel
 	 */

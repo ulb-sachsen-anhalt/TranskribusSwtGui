@@ -23,7 +23,7 @@ public class RecognitionPreferences {
 	private final static String HTR_NAME = "htrName";
 	private final static String TYPE_FACE = "typeFace";
 	private final static String DICTIONARY = "dictionary";
-	
+	private final static String LM = "lm";
 	
 	public static TextRecognitionConfig getHtrConfig(final int colId, final String serverUri) {
 
@@ -42,7 +42,8 @@ public class RecognitionPreferences {
 			config.setHtrName(pref.get(buildKey(HTR, colId, serverUri, HTR_NAME), null));
 			break;
 		case UPVLC:
-			config.setDictionary(pref.get(buildKey(HTR, colId, serverUri, DICTIONARY), null));
+//			config.setDictionary(pref.get(buildKey(HTR, colId, serverUri, DICTIONARY), null));
+			config.setLanguageModel(pref.get(buildKey(HTR, colId, serverUri, LM), null));
 			config.setHtrId(pref.getInt(buildKey(HTR, colId, serverUri, HTR_ID), 0));
 			config.setHtrName(pref.get(buildKey(HTR, colId, serverUri, HTR_NAME), null));			
 			break;
@@ -54,37 +55,44 @@ public class RecognitionPreferences {
 
 	public static void save(int colId, final String serverUri, TextRecognitionConfig config) {
 		if(config == null) {
-			throw new IllegalArgumentException("Config is null!");
+			logger.debug("remocing config for colId="+colId+", serverUri="+serverUri);
+			pref.remove(buildKey(HTR, colId, serverUri, MODE));
+			pref.remove(buildKey(HTR, colId, serverUri, LANGUAGE));			
+			pref.remove(buildKey(HTR, colId, serverUri, HTR_ID));
+			pref.remove(buildKey(HTR, colId, serverUri, HTR_NAME));
+			pref.remove(buildKey(HTR, colId, serverUri, LM));
 		}
-		Mode mode = config.getMode();
-		pref.put(buildKey(HTR, colId, serverUri, MODE), mode.toString());
-		pref.put(buildKey(HTR, colId, serverUri, LANGUAGE), config.getLanguage());
-		
-		final String dictKey;
-		switch(mode) {
-		case CITlab:
-			pref.putInt(buildKey(HTR, colId, serverUri, HTR_ID), config.getHtrId());
-			pref.put(buildKey(HTR, colId, serverUri, HTR_NAME), config.getHtrName());
-			dictKey = buildKey(HTR, colId, serverUri, DICTIONARY);
-			if(config.getDictionary() != null) {
-				pref.put(dictKey, config.getDictionary());
-			} else {
-				pref.remove(dictKey);
-			}
-			break;
-		case UPVLC:
-			pref.putInt(buildKey(HTR, colId, serverUri, HTR_ID), config.getHtrId());
-			pref.put(buildKey(HTR, colId, serverUri, HTR_NAME), config.getHtrName());
-			dictKey = buildKey(HTR, colId, serverUri, DICTIONARY);
-			if(config.getDictionary() != null) {
-				pref.put(dictKey, config.getDictionary());
-			} else {
-				pref.remove(dictKey);
-			}
-			break;			
-		default:
-			break;	
-		}		
+		else {
+			Mode mode = config.getMode();
+			pref.put(buildKey(HTR, colId, serverUri, MODE), mode.toString());
+			pref.put(buildKey(HTR, colId, serverUri, LANGUAGE), config.getLanguage());
+			
+			final String dictKey, lmKey;
+			switch(mode) {
+			case CITlab:
+				pref.putInt(buildKey(HTR, colId, serverUri, HTR_ID), config.getHtrId());
+				pref.put(buildKey(HTR, colId, serverUri, HTR_NAME), config.getHtrName());
+				dictKey = buildKey(HTR, colId, serverUri, DICTIONARY);
+				if(config.getDictionary() != null) {
+					pref.put(dictKey, config.getDictionary());
+				} else {
+					pref.remove(dictKey);
+				}
+				break;
+			case UPVLC:
+				pref.putInt(buildKey(HTR, colId, serverUri, HTR_ID), config.getHtrId());
+				pref.put(buildKey(HTR, colId, serverUri, HTR_NAME), config.getHtrName());
+				lmKey = buildKey(HTR, colId, serverUri, LM);
+				if(config.getLanguageModel() != null) {
+					pref.put(lmKey, config.getLanguageModel());
+				} else {
+					pref.remove(lmKey);
+				}
+				break;			
+			default:
+				break;	
+			}	
+		}
 	}
 	
 	public static OcrConfig getOcrConfig(int colId, String serverUri) {

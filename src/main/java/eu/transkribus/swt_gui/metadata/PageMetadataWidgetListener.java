@@ -255,7 +255,7 @@ public class PageMetadataWidgetListener implements SelectionListener, ModifyList
 		
 		String oldShapeType = RegionTypeUtil.getRegionType(sel);
 		if (newShapeType.equals(oldShapeType)) {
-			logger.debug("same shape types... doin' nothing!");
+			logger.debug("same shape types... doing nothing!");
 			return;
 		}
 		
@@ -415,7 +415,7 @@ public class PageMetadataWidgetListener implements SelectionListener, ModifyList
 //		List<Pair<ITrpShapeType, CustomTag>> tags4Shapes = new ArrayList<>();
 //		ATranscriptionWidget aw = ui.getSelectedTranscriptionWidget();
 //		if (aw==null) {
-//			logger.debug("no transcription widget selected - doin nothing!");
+//			logger.debug("no transcription widget selected - doing nothing!");
 //			return tags4Shapes;
 //		}
 //		List<Pair<ITrpShapeType, IntRange>> selRanges = aw.getSelectedShapesAndRanges();
@@ -476,7 +476,7 @@ public class PageMetadataWidgetListener implements SelectionListener, ModifyList
 //			// OLD:
 ////			ATranscriptionWidget aw = ui.getSelectedTranscriptionWidget();
 ////			if (aw==null) {
-////				logger.debug("no transcription widget selected - doin nothing!");
+////				logger.debug("no transcription widget selected - doing nothing!");
 ////				return;
 ////			}
 ////			boolean isLineEditor = aw.getType() == ATranscriptionWidget.Type.LINE_BASED;
@@ -574,7 +574,7 @@ public class PageMetadataWidgetListener implements SelectionListener, ModifyList
 //		logger.debug("clearing tags from selection!");
 //		ATranscriptionWidget aw = ui.getSelectedTranscriptionWidget();
 //		if (aw==null) {
-//			logger.debug("no transcription widget selected - doin nothing!");
+//			logger.debug("no transcription widget selected - doing nothing!");
 //			return;
 //		}
 //		
@@ -594,7 +594,7 @@ public class PageMetadataWidgetListener implements SelectionListener, ModifyList
 //	private void removeTagFromSelection(String tagName) {
 //		ATranscriptionWidget aw = ui.getSelectedTranscriptionWidget();
 //		if (aw==null) {
-//			logger.debug("no transcription widget selected - doin nothing!");
+//			logger.debug("no transcription widget selected - doing nothing!");
 //			return;
 //		}
 //		

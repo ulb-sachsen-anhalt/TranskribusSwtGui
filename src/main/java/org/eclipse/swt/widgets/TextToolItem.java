@@ -1,13 +1,16 @@
 package org.eclipse.swt.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.GC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.transkribus.core.util.SysUtils;
 import eu.transkribus.swt.util.Colors;
-import eu.transkribus.swt.util.Fonts;
 import eu.transkribus.swt.util.SWTUtil;
 
 public class TextToolItem extends ACustomToolItem {
@@ -28,12 +31,19 @@ public class TextToolItem extends ACustomToolItem {
 		
 	@Override
 	protected void initControl() {
-		text = new Text(parent, controlStyle);
+		text = new Text(parent, controlStyle | SWT.CENTER | SWT.SINGLE);
+		if (SysUtils.IS_OSX) {
+			text.addPaintListener(new PaintListener() {
+				@Override
+				public void paintControl(PaintEvent e) {
+					center();
+				}
+			});
+		}
 		
-		FontData[] fD = text.getFont().getFontData();
-		fD[0].setHeight(DEFAULT_FONT_SIZE);
-//		text.setFont(new Font(display,fD[0]));
-		text.setFont(Fonts.createFont(fD[0]));
+//		FontData[] fD = text.getFont().getFontData();
+//		fD[0].setHeight(DEFAULT_FONT_SIZE);
+//		text.setFont(Fonts.createFont(fD[0]));
 
 		this.setControl(text);
 	}

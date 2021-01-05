@@ -175,7 +175,7 @@ public class CanvasMouseListener implements MouseListener, MouseMoveListener, Mo
 		logger.debug("mouse down: "+e+" mode = "+canvas.getMode().toString()+" isMultiselect: "+isMultiselect);
 		canvas.setFocus();
 		
-		if  (e.count == 2) // doubleclick --> handled in mouseDoubleClick method
+		if  (e.count == 2) // double-click --> handled in mouseDoubleClick method
 			return;
 		
 		// update data:
@@ -191,13 +191,11 @@ public class CanvasMouseListener implements MouseListener, MouseMoveListener, Mo
 		mouseMoveMap.put(button, new Point(e.x, e.y));
 		mouseUpMap.put(button, null);
 				
-		boolean isMovingShapePossible = canvas.isMovingShapePossible();
-		
 		// set move image mode:
 		final boolean isMoveImgOnLeftBtnPossible = 
 				(canvas.getMode() == CanvasMode.SELECTION || canvas.getMode() == CanvasMode.LOUPE) && 
 				button == settings.getSelectMouseButton() 
-				&& !isMovingShapePossible && shapeBoundaryPt == null 
+				&& !canvas.isMovingShapePossible(isMultiselect) && shapeBoundaryPt == null 
 				&& mouseOverPoint == -1 && e.stateMask==0 && e.stateMask != CanvasKeys.SELECTION_RECTANGLE_REQUIRED_KEYS;
 		
 //		if (button == settings.getTranslateMouseButton()) {
@@ -249,7 +247,7 @@ public class CanvasMouseListener implements MouseListener, MouseMoveListener, Mo
 		
 		// set move shape mode:
 		if (canvas.getMode() == CanvasMode.SELECTION && button == settings.getSelectMouseButton() 
-				&& !canvas.isMovingBoundingBoxPossible() && canvas.isMovingShapePossible() 
+				&& !canvas.isMovingBoundingBoxPossible() && canvas.isMovingShapePossible(isMultiselect) 
 //				&& e.stateMask != CanvasKeys.SELECTION_RECTANGLE_REQUIRED_KEYS
 				) {
 			modeBackup = settings.getMode();
@@ -338,9 +336,17 @@ public class CanvasMouseListener implements MouseListener, MouseMoveListener, Mo
 			else if (canvas.getMode()==CanvasMode.MOVE_SHAPE && isLagThresh) {
 				Point trans = getTotalTranslation(mousePt, settings.getSelectMouseButton());
 				if (trans != null) {
-					currentMoveOp = canvas.getShapeEditor().moveShape(canvas.getFirstSelected(), trans.x, trans.y, currentMoveOp, true);
-					if (firstMove)
+					boolean isMultiselect = CanvasKeys.isCtrlOrCommandKeyDown(e.stateMask);
+					if (isMultiselect) {
+						currentMoveOp = canvas.getShapeEditor().moveShapes(canvas.getScene().getSelected(), trans.x, trans.y, currentMoveOp, true);
+					}
+					else {
+						currentMoveOp = canvas.getShapeEditor().moveShape(canvas.getFirstSelected(), trans.x, trans.y, currentMoveOp, true);
+					}
+					
+					if (firstMove) {
 						firstMove = false;
+					}
 					hasMouseMoved=true;
 				}
 			}
@@ -425,7 +431,7 @@ public class CanvasMouseListener implements MouseListener, MouseMoveListener, Mo
 		boolean isMultiselect = CanvasKeys.isCtrlOrCommandKeyDown(e.stateMask);
 		logger.debug("mouse up: "+e+" hasMouseMoved: "+hasMouseMoved+" isMultiselect: "+isMultiselect);
 		
-		if  (e.count == 2) // doubleclick --> handled in mouseDoubleClick method
+		if  (e.count == 2) // double-click --> handled in mouseDoubleClick method
 			return;
 
 		MouseButtons button = MouseButtons.fromInt(e.button);
@@ -572,7 +578,7 @@ public class CanvasMouseListener implements MouseListener, MouseMoveListener, Mo
 		// jump out of the function in this case
 		Rectangle b = new Rectangle(0, 0, canvas.getBounds().width, canvas.getBounds().height);
 		if (b.contains(e.x, e.y)) {
-			logger.trace("exit pt is inside bounds - doin nothin!");
+			logger.trace("exit pt is inside bounds - doing nothing!");
 			return;
 		}
 		

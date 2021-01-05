@@ -24,12 +24,12 @@ public class HtrFilterWidget extends TrpViewerFilterWidget {
 	private final static String LINK_FILTER_PUBLIC = "Public Models";
 	
 	public HtrFilterWidget(Composite parent, StructuredViewer viewer, int style) {
-		super(parent, viewer, style, TrpHtr.class, "htrId", "name", "language");
+		super(parent, viewer, false, TrpHtr.class, "htrId", "name", "language", "userName");
 	}
 	
 	@Override
-	protected void createCompositeArea() {
-		super.createCompositeArea();
+	protected void createCompositeArea(boolean withFilterLbl) {
+		super.createCompositeArea(withFilterLbl);
 		linkageFilterCombo = new Combo(this, SWT.READ_ONLY);
 		linkageFilterCombo.add(LINK_FILTER_ALL);
 		//FIXME collectionId is not set for admins in current HtrDao and filtering by this is not possible.
@@ -96,5 +96,13 @@ public class HtrFilterWidget extends TrpViewerFilterWidget {
 	public void reset() {
 		super.reset();
 		linkageFilterCombo.select(0);
+	}
+
+	public String getLinkageFilterComboText() {
+		return linkageFilterCombo.getText();
+	}
+
+	public void setLinkageFilterCombo(Combo linkageFilterCombo) {
+		this.linkageFilterCombo = linkageFilterCombo;
 	}
 }

@@ -40,10 +40,10 @@ public class TrpLoginDialog extends LoginDialog {
 		String state = UUID.randomUUID().toString();
 		String errorMsg = "";
 		
+		OAuthCreds creds = TrpGuiPrefs.getOAuthCreds(OAuthProvider.Google);
 		try {
 			switch (accType) {
 			case "Google":
-				OAuthCreds creds = TrpGuiPrefs.getOAuthCreds(OAuthProvider.Google);
 				if (creds == null) {
 					success = false;
 				} else {
@@ -55,6 +55,18 @@ public class TrpLoginDialog extends LoginDialog {
 				char[] pw = getPassword();
 				boolean rememberCreds = isRememberCredentials();
 				success = mw.login(server, user, String.valueOf(pw), rememberCreds);
+				
+				//with transition to the new website, the google login is deactivated (see LoginDialog).
+				//on default login make sure that any access token from before is revoked and cleared.
+				if(success && creds != null) {
+					TrpGuiPrefs.clearOAuthToken(OAuthProvider.Google);
+					try {
+						OAuthGuiUtil.revokeOAuthToken(creds.getRefreshToken(), OAuthProvider.Google);
+					} catch (Exception e) {
+						//do never fail here
+						logger.warn("Revoking Google refresh token failed: {}", e.getMessage());
+					}
+				}
 				break;
 			} // end switch
 		

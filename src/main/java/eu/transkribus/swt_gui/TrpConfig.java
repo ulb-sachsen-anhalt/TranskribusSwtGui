@@ -334,7 +334,7 @@ public class TrpConfig {
 			throw new IOException("Invalid profile name "+name+" - only alphanumeric characters and underscores are allowed!");
 		
 		if (isPredefinedProfile(name))
-			throw new IOException("Cannot ovverride a predefined profile!");
+			throw new IOException("Cannot override a predefined profile!");
 		
 		if (getAvailableProfiles().contains(name) && !overrideExisting) {
 			throw new FileExistsException("Profile "+name+" already exists!");

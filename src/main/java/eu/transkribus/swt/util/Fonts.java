@@ -13,6 +13,9 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Item;
+import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.TreeItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,7 +111,7 @@ public class Fonts {
      * as possible from the provided swt <code>FontData</code>.
      * <p>Generally speaking, given a font size, an swt font will
      * display differently on the screen than the corresponding awt
-     * one. Because the SWT toolkit use native graphical ressources whenever
+     * one. Because the SWT toolkit use native graphical resources whenever
      * it is possible, this fact is platform dependent. To address
      * this issue, it is possible to enforce the method to return
      * an awt font with the same height as the swt one.
@@ -196,6 +199,42 @@ public class Fonts {
 		ctrl.setFont(f);
 		return f;
 	}
+	
+	public static Font setBoldFont(TreeItem ctrl) {
+		Font f = createBoldFont(ctrl.getFont());
+		ctrl.setFont(f);
+		return f;
+	}
+	
+	public static Font setItalicFont(TreeItem ctrl) {
+		Font f = createItalicFont(ctrl.getFont());
+		ctrl.setFont(f);
+		return f;
+	}
+	
+	public static Font setNormalFont(TreeItem ctrl) {
+		Font f = createNormalFont(ctrl.getFont());
+		ctrl.setFont(f);
+		return f;
+	}	
+	
+	public static Font setBoldFont(TableItem ctrl) {
+		Font f = createBoldFont(ctrl.getFont());
+		ctrl.setFont(f);
+		return f;
+	}
+	
+	public static Font setItalicFont(TableItem ctrl) {
+		Font f = createItalicFont(ctrl.getFont());
+		ctrl.setFont(f);
+		return f;
+	}
+	
+	public static Font setNormalFont(TableItem ctrl) {
+		Font f = createNormalFont(ctrl.getFont());
+		ctrl.setFont(f);
+		return f;
+	}	
 	
 //	public static Font createRedFont(Font f) {
 //		if (f.getFontData().length > 0) {

@@ -41,21 +41,24 @@ public class TrpGuiPrefs {
 //	final static String wtf = "PMpCIaf8HUUjbNMW1DvpmERZqov9ZMQaE6e7SFypaFg=";
 	final static String wtf = "PMpCIaf8HUUjbNMW1DvpmE";
 	
-	public static final String CREDS_NODE = "creds";
-	public static final String OAUTH_NODE = "oauth";
 	public static final String ACCOUNT_NODE = "acc";
+	public static final String CREDS_NODE = "creds";
 	public static final String EXPORT_NODE = "export";
 	public static final String PROXY_NODE = "proxy";
 	public static final String LA_NODE = "LA";
-		
+	
+	@Deprecated
+	public static final String OAUTH_NODE = "oauth";
+	@Deprecated
 	private static final String OAUTH_UN_KEY = "_un";
+	@Deprecated
 	private static final String OAUTH_PIC_KEY = "_pic";
+	@Deprecated
+	private static final String LAST_ACCOUNT_TYPE_KEY = "accType";
 	
 	public static final String LAST_USER_KEY = "lastUser";
 	public static final String UN_KEY = "trpUn";
 	public static final String PW_KEY = "trpPw";
-	
-	private static final String LAST_ACCOUNT_TYPE_KEY = "accType";
 	
 	public static final String LAST_EXPORT_FOLDER_KEY = "lastExportFolder";
 	
@@ -171,14 +174,16 @@ public class TrpGuiPrefs {
 		}
 	}
 	
+	@Deprecated
 	public static void storeLastAccountType(String accType) throws Exception {
 		accountPrefs.put(LAST_ACCOUNT_TYPE_KEY, accType);
 	}
-	
+
 	public static String getLastLoginAccountType() {
 		return accountPrefs.get(LAST_ACCOUNT_TYPE_KEY, OAuthGuiUtil.TRANSKRIBUS_ACCOUNT_TYPE);
 	}
-	
+
+	@Deprecated
 	public static void storeOAuthCreds(final OAuthProvider prov, final String userName, final String profilePicUrl, final String refreshToken) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
 		logger.debug("storing refreshToken for OAuth Provider "+ prov.toString());
 		oAuthPrefs.put(prov.toString() + OAUTH_UN_KEY, userName);
@@ -196,6 +201,7 @@ public class TrpGuiPrefs {
 	 * @throws IllegalBlockSizeException 
 	 * @throws InvalidKeyException 
 	 */
+	@Deprecated
 	public static OAuthCreds getOAuthCreds(OAuthProvider prov) {
 		
 		if (prov == null) {
@@ -356,7 +362,8 @@ public class TrpGuiPrefs {
 	public static void main(String[] args) throws Exception {
 		testPreferences();
 	}
-	
+
+	@Deprecated
 	public static class OAuthCreds {
 		private OAuthProvider prov;
 		private String refreshToken;

@@ -319,7 +319,10 @@ public class CanvasScene {
 		
 		// sort shapes if possible
 //		CanvasShapeUtil.sortCanvasShapesByReadingOrder(selectedShapes);
-		CanvasShapeUtil.sortCanvasShapesByXY(selectedShapes);
+		//CanvasShapeUtil.sortCanvasShapesByXY(selectedShapes);
+		//this will sort the shapes with YX - like it is the standard now
+		//TODO: sort dependent on the situation - merge one upon the other or side by side (if this makes any sense because would you merge two columns into one??)
+		CanvasShapeUtil.sortCanvasShapesByCoordinates(selectedShapes, true);
 		for (ICanvasShape s : selectedShapes) {
 			logger.debug(CanvasShapeUtil.getTrpShapeType(s).getId());
 		}
@@ -403,9 +406,9 @@ public class CanvasScene {
 	 * Splits the given shape by the line running through [x1,y1], [x1, y2] 
 	 * @param shape The shape to split
 	 * @param sendSignal True if event signal shall be sent
-	 * @param p1 The parent shape for the first (left) split; if null, the parent shape of the splitted shape is used
-	 * @param p2 The parent shape for the second (right) split; if null, the parent shape of the splitted shape is used
-	 * @param isFollowUp Indicates that this is a follow-up split, i.e. a split occuring from splitting a parent shape!
+	 * @param p1 The parent shape for the first (left) split; if null, the parent shape of the split shape is used
+	 * @param p2 The parent shape for the second (right) split; if null, the parent shape of the split shape is used
+	 * @param isFollowUp Indicates that this is a follow-up split, i.e. a split occurring from splitting a parent shape!
 	 * @return A ShapeEditOperation object that contains information on the performed split or null if there was some error
 	 */
 	public ShapeEditOperation splitShape(ICanvasShape shape, CanvasPolyline pl, boolean sendSignal, ICanvasShape p1, ICanvasShape p2, boolean isFollowUp) {
@@ -415,7 +418,7 @@ public class CanvasScene {
 		logger.debug("splitting shape "+shape);
 		//logger.debug("shape points "+shape.getPoints());
 
-		ShapeEditOperation op = new ShapeEditOperation(ShapeEditType.SPLIT, "Shape splitted", shape);
+		ShapeEditOperation op = new ShapeEditOperation(ShapeEditType.SPLIT, "Shape split", shape);
 		op.setFollowUp(isFollowUp);
 		
 		if (sendSignal) {

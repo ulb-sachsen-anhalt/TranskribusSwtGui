@@ -1,7 +1,7 @@
 package eu.transkribus.swt_gui.htr;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -24,10 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.transkribus.core.model.beans.DocSelection;
-import eu.transkribus.core.model.beans.DocumentSelectionDescriptor;
+import eu.transkribus.core.model.beans.enums.CreditSelectionStrategy;
 import eu.transkribus.core.util.CoreUtils;
 import eu.transkribus.swt.util.DialogUtil;
-import eu.transkribus.swt.util.MultiCheckSelectionCombo;
 import eu.transkribus.swt.util.SWTUtil;
 import eu.transkribus.swt.util.ToolBox;
 import eu.transkribus.swt_gui.mainwidget.storage.Storage;
@@ -40,19 +39,10 @@ public class HtrTextRecognitionDialog extends Dialog {
 	private static final Logger logger = LoggerFactory.getLogger(HtrTextRecognitionDialog.class);
 	
 	private HtrTextRecognitionConfigDialog trcd = null;
-	
-	private Button thisPageBtn, severalPagesBtn;
+
 	private CurrentTranscriptOrDocPagesOrCollectionSelector dps;
 	private boolean docsSelected = false;
-//	private List<DocumentSelectionDescriptor> selectedDocDescriptors;
 	private List<DocSelection> selectedDocSelections;
-	
-//	private Button doLinePolygonSimplificationBtn, keepOriginalLinePolygonsBtn, doStoreConfMatsBtn, clearLinesBtn;
-	private MultiCheckSelectionCombo multiCombo;
-	ToolBar structureBar;
-	ToolItem structureItem;
-	ToolBox structureBox;
-	List<String> selectionArray = new ArrayList<>();
 	
 	PyLaiaRecognitionConfComposite pylaiaConfComp;
 	CitlabRecognitionConfComposite citlabConfComp;
@@ -92,58 +82,8 @@ public class HtrTextRecognitionDialog extends Dialog {
 		citlabConfComp.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false, 3, 1));
 		
 		pylaiaConfComp = new PyLaiaRecognitionConfComposite(SWTUtil.dummyShell);
-		pylaiaConfComp.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false, 3, 1));		
+		pylaiaConfComp.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false, 3, 1));
 		
-//		thisPageBtn = new Button(cont, SWT.RADIO);
-//		thisPageBtn.setText("On this page");
-//		thisPageBtn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
-//		thisPageBtn.setSelection(true);
-//		
-//		severalPagesBtn = new Button(cont, SWT.RADIO);
-//		severalPagesBtn.setText("Pages:");
-//		severalPagesBtn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-//		
-//		dps = new DocPagesSelector(cont, SWT.NONE, false, store.getDoc().getPages());
-//		dps.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-//		dps.setEnabled(false);
-//		
-//		severalPagesBtn.addSelectionListener(new SelectionAdapter() {
-//			@Override
-//			public void widgetSelected(SelectionEvent e) {
-//				dps.setEnabled(severalPagesBtn.getSelection());
-//			}
-//		});
-		
-		
-//		doLinePolygonSimplificationBtn = new Button(cont, SWT.CHECK);
-//		doLinePolygonSimplificationBtn.setText("Do polygon simplification");
-//		doLinePolygonSimplificationBtn.setToolTipText("Perform a line polygon simplification after the recognition process to reduce the number of points");
-//		doLinePolygonSimplificationBtn.setSelection(true);
-//		doLinePolygonSimplificationBtn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
-//		
-//		clearLinesBtn = new Button(cont, SWT.CHECK);
-//		clearLinesBtn.setText("Clear lines");
-//		clearLinesBtn.setToolTipText("Clear existing transcriptions before recognition");
-//		clearLinesBtn.setSelection(true);
-//		clearLinesBtn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));		
-//		
-//		keepOriginalLinePolygonsBtn = new Button(cont, SWT.CHECK);
-//		keepOriginalLinePolygonsBtn.setText("Keep original line polygons");
-//		keepOriginalLinePolygonsBtn.setToolTipText("Keep the original line polygons after the recognition process, e.g. if they have been already corrected");
-//		keepOriginalLinePolygonsBtn.setSelection(false);
-//		keepOriginalLinePolygonsBtn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
-//		
-//		doStoreConfMatsBtn = new Button(cont, SWT.CHECK);
-//		doStoreConfMatsBtn.setText("Enable Keyword Spotting");
-//		doStoreConfMatsBtn.setToolTipText("The internal recognition result respresentation, needed for keyword spotting, will be stored in addition to the transcription.");
-//		doStoreConfMatsBtn.setSelection(true);
-//		doStoreConfMatsBtn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
-//		
-//		SWTUtil.onSelectionEvent(keepOriginalLinePolygonsBtn, e -> {
-//			doLinePolygonSimplificationBtn.setEnabled(!keepOriginalLinePolygonsBtn.getSelection());
-//		});
-//		doLinePolygonSimplificationBtn.setEnabled(!keepOriginalLinePolygonsBtn.getSelection());		
-//				
 		configTxt = new Text(cont, SWT.MULTI | SWT.READ_ONLY | SWT.BORDER);
 		configTxt.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 3, 6));
 				
@@ -159,8 +99,7 @@ public class HtrTextRecognitionDialog extends Dialog {
 					if(trcd.open() == IDialogConstants.OK_ID) {
 						logger.info("OK pressed");
 						config = trcd.getConfig();
-						configTxt.setText(config.toString());
-						store.saveTextRecognitionConfig(config);
+						store.saveTextRecognitionConfig(config);	
 						updateUi();
 					}
 					trcd = null;
@@ -172,9 +111,6 @@ public class HtrTextRecognitionDialog extends Dialog {
 		
 		config = store.loadTextRecognitionConfig();
 		logger.debug("Config loaded:" + config);
-		if(config != null) {
-			configTxt.setText(config.toString());
-		}
 		
 		updateUi();
 		return cont;
@@ -220,64 +156,66 @@ public class HtrTextRecognitionDialog extends Dialog {
 			}
 		}
 		
-		if(config == null) {
+		if (config == null) {
 			DialogUtil.showErrorMessageBox(getShell(), "Bad Configuration", "Please define a configuration.");
 			return;
 		}
 		
-		boolean isCitlab = config!=null && config.getMode()==Mode.CITlab;
-		
-		if (isCitlab) {
-			config.setStructures(citlabConfComp.selectionArray);
-			config.setKeepOriginalLinePolygons(citlabConfComp.keepOriginalLinePolygonsBtn.getSelection());
-			config.setDoLinePolygonSimplification(citlabConfComp.doLinePolygonSimplificationBtn.getSelection());
-			
-			config.setDoStoreConfMats(citlabConfComp.doStoreConfMatsBtn.getSelection());			
-		}
-		else {
-			config.setDoLinePolygonSimplification(pylaiaConfComp.doLinePolygonSimplificationBtn.getSelection());
-			config.setClearLines(pylaiaConfComp.clearLinesBtn.getSelection());
-			
-			try {
-				int batchSize = Integer.parseInt(pylaiaConfComp.batchSizeText.getText());
-				config.setBatchSize(batchSize);
+		if (config != null) {
+//			boolean isCitlab = config.getMode()==Mode.CITlab;
+			if (config.getMode()==Mode.CITlab) {
+				logger.info(Arrays.toString(citlabConfComp.structreTagComp.getMultiCombo().getSelections()));
+				List<String> selectionList = Arrays.asList(citlabConfComp.structreTagComp.getMultiCombo().getSelections());  
+				config.setStructures(selectionList);
+				config.setKeepOriginalLinePolygons(citlabConfComp.keepOriginalLinePolygonsBtn.getSelection());
+				config.setDoLinePolygonSimplification(citlabConfComp.doLinePolygonSimplificationBtn.getSelection());
+				config.setDoStoreConfMats(citlabConfComp.doStoreConfMatsBtn.getSelection());			
 			}
-			catch (Exception e) {
-				DialogUtil.showErrorMessageBox(getShell(), "Error parsing batch size", "Invalid batch size: "+pylaiaConfComp.batchSizeText.getText());
+			else if (config.getMode()==Mode.UPVLC) {
+				config.setUseExistingLinePolygons(pylaiaConfComp.useExistingLinePolygonsBtn.getSelection());
+				config.setDoLinePolygonSimplification(pylaiaConfComp.doLinePolygonSimplificationBtn.getSelection());
+				config.setDoWordSeg(pylaiaConfComp.doWordSegBtn.getSelection());
+				
+				try {
+					int batchSize = Integer.parseInt(pylaiaConfComp.batchSizeText.getText());
+					config.setBatchSize(batchSize);
+				}
+				catch (Exception e) {
+					DialogUtil.showErrorMessageBox(getShell(), "Error parsing batch size", "Invalid batch size: "+pylaiaConfComp.batchSizeText.getText());
+					return;
+				}
+			}
+			else  {
+				DialogUtil.showErrorMessageBox(getShell(), "Bad Configuration", "No Citlab or UPVLC model selected - should not happen...");
 				return;
 			}
+			//TODO make this configurable in GUI
+			config.setCreditSelectionStrategy(CreditSelectionStrategy.COLLECTION_THEN_USER);
 		}
-		
-		config.setStructures(selectionArray);
-//		config.setKeepOriginalLinePolygons(keepOriginalLinePolygonsBtn.getSelection());
-//		config.setDoLinePolygonSimplification(doLinePolygonSimplificationBtn.getSelection());
-//		config.setClearLines(clearLinesBtn.getSelection());
-//		config.setDoStoreConfMats(doStoreConfMatsBtn.getSelection());
 		
 		super.okPressed();
 	}
 	
 	private void updateUi() {
-		boolean isCitlab = config!=null && config.getMode()==Mode.CITlab;
-		
-		if (isCitlab) {
+//		boolean isCitlab = config!=null && config.getMode()==Mode.CITlab;
+		configTxt.setText(config!=null ? config.toString() : "");
+		if (config == null) {
+			citlabConfComp.setParent(SWTUtil.dummyShell);
+			pylaiaConfComp.setParent(SWTUtil.dummyShell);
+			container.layout();			
+		}
+		else if (config.getMode()==Mode.CITlab) {
 			citlabConfComp.setParent(container);
 			citlabConfComp.moveAbove(configTxt);
 			pylaiaConfComp.setParent(SWTUtil.dummyShell);
 			container.layout();
 		}
-		else {
+		else if (config.getMode()==Mode.UPVLC) {
 			pylaiaConfComp.setParent(container);
 			pylaiaConfComp.moveAbove(configTxt);
 			citlabConfComp.setParent(SWTUtil.dummyShell);
 			container.layout();
 		}
-		
-//		doLinePolygonSimplificationBtn.setVisible(true);
-//		boolean isCitlab = config!=null && config.getMode()==Mode.CITlab;
-//		clearLinesBtn.setVisible(!isCitlab);
-//		keepOriginalLinePolygonsBtn.setVisible(isCitlab);
-//		doStoreConfMatsBtn.setVisible(isCitlab);
 	}
 
 	@Override

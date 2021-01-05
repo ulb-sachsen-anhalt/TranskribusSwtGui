@@ -160,7 +160,7 @@ public class CanvasShapeEditor {
 //		
 //		// Split all child shapes
 //		for (ICanvasShape child : children) {
-//			// Determine the parent shapes of the child shape that shall be splitted by iterating through the edit operations that were done so far
+//			// Determine the parent shapes of the child shape that shall be split by iterating through the edit operations that were done so far
 //			ICanvasShape p1=null, p2=null;
 //			for (ShapeEditOperation opParent : splitOps) {
 //				if (opParent.getNewShapes().get(0).equals(child.getParent()) 
@@ -181,7 +181,7 @@ public class CanvasShapeEditor {
 //		}
 //		
 //		if (splitOps.isEmpty()) {
-//			logger.warn("Cannot split - no shapes actually splitted by line!");
+//			logger.warn("Cannot split - no shapes actually split by line!");
 //			return null;
 //		}
 //		
@@ -635,6 +635,12 @@ public class CanvasShapeEditor {
 	}
 	
 	private ShapeEditOperation moveShapeDefault(ICanvasShape shape, int mouseTrX, int mouseTrY, ShapeEditOperation currentMoveOp, boolean addToUndoStack) {
+		List<ICanvasShape> shapes = new ArrayList<>();
+		shapes.add(shape);
+		return moveShapesDefault(shapes, mouseTrX, mouseTrY, currentMoveOp, addToUndoStack);
+	}
+	
+	private ShapeEditOperation moveShapesDefault(List<ICanvasShape> shapes, int mouseTrX, int mouseTrY, ShapeEditOperation currentMoveOp, boolean addToUndoStack) {
 		// invert transform:
 		java.awt.Point transWoTr = canvas.getPersistentTransform().inverseTransformWithoutTranslation(mouseTrX, mouseTrY);
 		logger.trace("t = "+transWoTr);
@@ -642,11 +648,13 @@ public class CanvasShapeEditor {
 		// if first move --> determine shapes to move
 		if (currentMoveOp==null) {
 			List<ICanvasShape> shapesToMove = new ArrayList<>();
-			shapesToMove.add(shape);
+			shapesToMove.addAll(shapes);
 			// move subshapes if required key down:
 			if (CanvasKeys.isKeyDown(canvas.getKeyListener().getCurrentStateMask(), CanvasKeys.MOVE_SUBSHAPES_REQUIRED_KEY)) {
-				logger.debug("moving subshapes!");
-				shapesToMove.addAll(shape.getChildren(true));
+				for (ICanvasShape shape : shapes) {
+					logger.trace("moving subshapes!");
+					shapesToMove.addAll(shape.getChildren(true));					
+				}
 			}
 			currentMoveOp = new ShapeEditOperation(ShapeEditType.EDIT, "Moved shape(s)", shapesToMove);
 			if (addToUndoStack) {
@@ -659,7 +667,7 @@ public class CanvasShapeEditor {
 		for (int i=0; i<currentMoveOp.getShapes().size(); ++i) {
 			ICanvasShape s = currentMoveOp.getShapes().get(i);
 			
-			// reset points if this isnt the first move (translation is always specified global for one move to prevent rounding errors!)
+			// reset points if this isn't the first move (translation is always specified global for one move to prevent rounding errors!)
 //			if (!firstMove) {
 				ICanvasShape bs = currentMoveOp.getBackupShapes().get(i);
 				s.setPoints(bs.getPoints());
@@ -683,8 +691,10 @@ public class CanvasShapeEditor {
 	}
 	
 	/** Translate the selection object by the given coordinates. The translation is always given as the \emph{total}
-	 * translation for a current move operation so that rounding errors are minimized! 
-	 * **/
+	 * translation for a current move operation so that rounding errors are minimized!
+	 * 
+	 *  If the shape is a TableCell --> move either the cell alone or depending on the additional buttons pressed, the whole column or row
+	*/
 	public ShapeEditOperation moveShape(ICanvasShape shape, int mouseTrX, int mouseTrY, ShapeEditOperation currentMoveOp, boolean addToUndoStack) {
 //		ICanvasShape selected = canvas.getFirstSelected();
 		if (shape == null)
@@ -708,6 +718,18 @@ public class CanvasShapeEditor {
 			return moveShapeDefault(shape, mouseTrX, mouseTrY, currentMoveOp, addToUndoStack);
 		}
 	}
+	
+	// move multiple shapes at once; does not work for TableCell's currently!
+	public ShapeEditOperation moveShapes(List<ICanvasShape> shapes, int mouseTrX, int mouseTrY, ShapeEditOperation currentMoveOp, boolean addToUndoStack) {
+		for (ICanvasShape s : shapes) {
+			TrpTableCellType tc = TableUtils.getTableCell(s);
+			if (tc != null) {
+				logger.debug("cannot move multiple table cells at once --> returnin null!");
+				return null;
+			}
+		}
+		return moveShapesDefault(shapes, mouseTrX, mouseTrY, currentMoveOp, addToUndoStack);
+	}	
 
 	public SWTCanvas getCanvas() {
 		return canvas;
@@ -854,21 +876,21 @@ public class CanvasShapeEditor {
 				TrpTableCellType tc1 = (TrpTableCellType) s1.getData();
 				TrpTableCellType tc2 = (TrpTableCellType) s2.getData();
 				
-				// set span to 1 for left / upper part of splitted cell:
+				// set span to 1 for left / upper part of split cell:
 				int diff = 0;
 				if (tc1.getPos()[pi] < insertIndex)
 					diff = insertIndex-tc1.getPos()[pi];
 				
 				tc1.setSpan(pi, 1+diff);
 				
-				// set position to -1 for right / lower part of splitted cell (to correct it below!)
+				// set position to -1 for right / lower part of split cell (to correct it below!)
 				tc2.setPos(pi, -1);
 				tc2.setSpan(pi, tc2.getSpan()[pi]-diff);
 				
 	//			splitOp.addCellBackup(tc2);
 				logger.trace("tc2 = "+tc2);
 				
-	//			if (dir == SplitDirection.HORIZONAL) {
+	//			if (dir == SplitDirection.HORIZONTAL) {
 	//				tc2.setCol(-1);
 	//			} else {
 	//				tc2.setRow(-1);
@@ -935,7 +957,7 @@ public class CanvasShapeEditor {
 			splitOps.add(op);
 		}
 		else{
-			//means that parent was not able to be split and hence also no childs should be splitted
+			//means that parent was not able to be split and hence also no childs should be split
 			return null;
 			
 		}
@@ -943,7 +965,7 @@ public class CanvasShapeEditor {
 		// Split all child shapes
 		for (ICanvasShape child : children) {
 			//logger.debug("split ALL childs: " + child.getType());
-			// Determine the parent shapes of the child shape that shall be splitted by iterating through the edit operations that were done so far
+			// Determine the parent shapes of the child shape that shall be split by iterating through the edit operations that were done so far
 			ICanvasShape p1=null, p2=null;
 			for (ShapeEditOperation opParent : splitOps) {
 				if (opParent.getNewShapes().get(0).equals(child.getParent()) 
@@ -964,7 +986,7 @@ public class CanvasShapeEditor {
 		}
 		
 		if (splitOps.isEmpty()) {
-			logger.warn("Cannot split - no shapes actually splitted by line!");
+			logger.warn("Cannot split - no shapes actually split by line!");
 			return null;
 		}
 		
@@ -2016,10 +2038,10 @@ public class CanvasShapeEditor {
 				
 				String pStr() { return StringUtils.join(p, " "); }
 			}		
-			// the matrix of lists of points that will constitute the splitted cells 
+			// the matrix of lists of points that will constitute the split cells
 			Pt[][] pts = new Pt[tc.getRowSpan()+1][tc.getColSpan()+1];
 			
-			ShapeEditOperation op = new ShapeEditOperation(ShapeEditType.CUSTOM, "Splitted merged cell");
+			ShapeEditOperation op = new ShapeEditOperation(ShapeEditType.CUSTOM, "Split merged cell");
 			
 	//		List<ShapeEditOperation> ops = new ArrayList<>();
 			
@@ -2043,7 +2065,7 @@ public class CanvasShapeEditor {
 				int count=0;
 				
 				boolean isRightOrTopSide = s>1;
-				if (isRightOrTopSide) // for right or top side we have step trough neighbor cells in the opposite direction
+				if (isRightOrTopSide) // for right or top side we have step through neighbor cells in the opposite direction
 					Collections.reverse(ns);
 				
 				if (!ns.isEmpty()) {

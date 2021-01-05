@@ -42,7 +42,7 @@
         </includes>
     </fileSet>
     
-    <!-- Files from the classes directory (i.e. the copied resources from src/main/resouces) -->
+    <!-- Files from the classes directory (i.e. the copied resources from src/main/resources) -->
     <fileSet>
     	<directory>${project.build.directory}/classes</directory>
     	<outputDirectory>${file.separator}</outputDirectory>

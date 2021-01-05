@@ -53,6 +53,7 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.util.BidiUtils;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -147,15 +148,18 @@ import eu.transkribus.core.util.AuthUtils;
 import eu.transkribus.core.util.CoreUtils;
 import eu.transkribus.core.util.IntRange;
 import eu.transkribus.core.util.PageXmlUtils;
+import eu.transkribus.core.util.PointStrUtils;
 import eu.transkribus.core.util.SysUtils;
 import eu.transkribus.core.util.SysUtils.JavaInfo;
 import eu.transkribus.core.util.ZipUtils;
 import eu.transkribus.swt.progress.ProgressBarDialog;
 import eu.transkribus.swt.util.CreateThumbsService;
 import eu.transkribus.swt.util.DialogUtil;
+import eu.transkribus.swt.util.DocumentManager;
 import eu.transkribus.swt.util.Fonts;
 import eu.transkribus.swt.util.Images;
 import eu.transkribus.swt.util.LoginDialog;
+import eu.transkribus.swt.util.MessageDialogStyledWithToggle;
 import eu.transkribus.swt.util.SWTLog;
 import eu.transkribus.swt.util.SWTUtil;
 import eu.transkribus.swt.util.SplashWindow;
@@ -180,6 +184,7 @@ import eu.transkribus.swt_gui.canvas.shapes.ICanvasShape;
 import eu.transkribus.swt_gui.collection_manager.CollectionEditorDialog;
 import eu.transkribus.swt_gui.collection_manager.CollectionManagerDialog;
 import eu.transkribus.swt_gui.collection_manager.CollectionUsersDialog;
+import eu.transkribus.swt_gui.credits.CreditManagerDialog;
 import eu.transkribus.swt_gui.dialogs.ActivityDialog;
 import eu.transkribus.swt_gui.dialogs.AffineTransformDialog;
 import eu.transkribus.swt_gui.dialogs.AutoSaveDialog;
@@ -196,6 +201,7 @@ import eu.transkribus.swt_gui.dialogs.ProgramUpdaterDialog;
 import eu.transkribus.swt_gui.dialogs.ProxySettingsDialog;
 import eu.transkribus.swt_gui.dialogs.SettingsDialog;
 import eu.transkribus.swt_gui.dialogs.TrpLoginDialog;
+import eu.transkribus.swt_gui.dialogs.TrpMessageDialog;
 import eu.transkribus.swt_gui.dialogs.VersionsDiffBrowserDialog;
 import eu.transkribus.swt_gui.edit_decl_manager.EditDeclManagerDialog;
 import eu.transkribus.swt_gui.edit_decl_manager.EditDeclViewerDialog;
@@ -292,6 +298,7 @@ public class TrpMainWidget {
 
 	
 	// Dialogs
+	DocumentManager docManDiag;
 	SearchDialog searchDiag;
 	TrpVirtualKeyboardsDialog vkDiag;
 	TranscriptsDialog versionsDiag;
@@ -315,7 +322,8 @@ public class TrpMainWidget {
 	EditDeclManagerDialog edDiag;
 	ActivityDialog ad;
 	Shell sleakDiag;
-
+	CreditManagerDialog creditManagerDialog;
+	
 	/** Storage keeps track of the currently loaded collection, document, page, transcription etc. */
 	Storage storage;
 	boolean isPageLocked = false;
@@ -343,6 +351,7 @@ public class TrpMainWidget {
 	ShapeEditController shapeEditController;
 	DocPageLoadController docPageController;
 //	TaggingController taggingController;
+	CollectionUtilsController collectionUtilsController;
 
 	private Runnable updateThumbsWidgetRunnable = new Runnable() {
 		@Override public void run() {
@@ -383,6 +392,7 @@ public class TrpMainWidget {
 		docSyncController = new DocSyncController(this);
 		shapeEditController = new ShapeEditController(this);
 		docPageController = new DocPageLoadController(this);
+		collectionUtilsController = new CollectionUtilsController(this);
 //		taggingController = new TaggingController(this);
 		updateToolBars();
 		
@@ -445,6 +455,10 @@ public class TrpMainWidget {
 		return shapeEditController;
 	}
 	
+	public CollectionUtilsController getCollectionUtilsController() {
+		return collectionUtilsController;
+	}
+	
 	public String getLastLocalDocFolder() {
 		return lastLocalDocFolder;
 	}
@@ -499,26 +513,12 @@ public class TrpMainWidget {
 				if (OAuthGuiUtil.TRANSKRIBUS_ACCOUNT_TYPE.equals(lastAccount)) {
 					Pair<String, String> lastLogin = TrpGuiPrefs.getLastStoredCredentials();
 					if (lastLogin != null) {
-						// TODO: also remember server in TrpGuiPrefs, for now: logon to prod server
 						login(TrpServerConn.PROD_SERVER_URI, lastLogin.getLeft(), lastLogin.getRight(), true);
 					}
 				} else {
-					OAuthProvider prov;
-					try {
-						prov = OAuthProvider.valueOf(lastAccount);
-					} catch (Exception e) {
-						prov = null;
-					}
-					if (prov != null) {
-						//TODO get state token from server
-						final String state = "test";
-						OAuthCreds creds = TrpGuiPrefs.getOAuthCreds(prov);
-						loginOAuth(TrpServerConn.PROD_SERVER_URI, creds.getRefreshToken(), state, OAuthGuiUtil.REDIRECT_URI, prov);
-					}
+					// >=1.13.0: Google Login is no longer supported. Stop here and show LoginDialog with instructions
+					mw.loginDialog("Please set a password and use the Transkribus login");
 				}
-			
-			} catch (OAuthTokenRevokedException e) {
-				logger.error("OAuth token was revoked!", e);
 			} catch (Exception e) {
 				logger.error("Error during login in postInit: "+e.getMessage(), e);
 			}
@@ -750,7 +750,7 @@ public class TrpMainWidget {
 		ui.getDocInfoWidget().getLoadedDocText().setText(loadedDocStr);
 		ui.getDocInfoWidget().getCurrentCollectionText().setText(currentCollectionStr);
 		if(storage.isGtDoc()) {
-			ui.getServerWidget().updateHighlightedGroundTruthTreeViewerRow();
+			//ui.getServerWidget().updateHighlightedGroundTruthTreeViewerRow();
 		} else {
 			ui.getServerWidget().updateHighlightedRow();
 		}
@@ -821,13 +821,13 @@ public class TrpMainWidget {
 			TrpTextLineType currLine = storage.getCurrentLineObject();
 			TrpWordType currWord = storage.getCurrentWordObject();
 			if (currWord != null) {
-				java.awt.Rectangle boundingRect = PageXmlUtils.buildPolygon(currWord.getCoords().getPoints()).getBounds();
+				java.awt.Rectangle boundingRect = PointStrUtils.buildPolygon(currWord.getCoords().getPoints()).getBounds();
 				title += " [ current word: w*h: " + boundingRect.width + " * " + boundingRect.height + " ]";
 			} else if (currLine != null) {
-				java.awt.Rectangle boundingRect = PageXmlUtils.buildPolygon(currLine.getCoords().getPoints()).getBounds();
+				java.awt.Rectangle boundingRect = PointStrUtils.buildPolygon(currLine.getCoords().getPoints()).getBounds();
 				title += " [ current line: w*h: " + boundingRect.width + " * " + boundingRect.height + " ]";
 			} else if (currRegion != null) {
-				java.awt.Rectangle boundingRect = PageXmlUtils.buildPolygon(currRegion.getCoords().getPoints()).getBounds();
+				java.awt.Rectangle boundingRect = PointStrUtils.buildPolygon(currRegion.getCoords().getPoints()).getBounds();
 				title += " [ current region: w*h: " + boundingRect.width + " * " + boundingRect.height + " ]";
 			}
 
@@ -2141,19 +2141,20 @@ public class TrpMainWidget {
 			return;
 		}
 		double initWidth = readingOrderCircleInitWidth;
-		logger.debug("initWidth " + initWidth);
+		logger.debug("initWidth ro size " + initWidth);
 		
 		double resizeFactor = 1.0;
 		if (imgMd.getxResolution() < 210){
 			resizeFactor = 0.5;
 		}
 		else if(imgMd.getxResolution() > 210 && imgMd.getxResolution() < 390){
-			resizeFactor = 0.75;
+			resizeFactor = 1.0;
 		}
 		double tmpWith = initWidth*resizeFactor;
 		logger.debug("set ro in settings " + tmpWith);
 		
-		canvas.getSettings().setReadingOrderCircleWidth((int) tmpWith);
+		//let the valie in the settings as it is
+		//canvas.getSettings().setReadingOrderCircleWidth((int) tmpWith);
 	}
 
 	public void updateTreeSelectionFromCanvas() {
@@ -2776,7 +2777,11 @@ public class TrpMainWidget {
 					autoSaveController.checkForNewerAutoSavedPage(storage.getPage());
 				}
 				getCanvas().fitWidth();
-				adjustReadingOrderDisplayToImageSize();				
+				/*
+				 * this way we could automatically adjust the ro circle to the image dimensions
+				 * but then the settings get overwritten; better keep user settings
+				 */
+				//adjustReadingOrderDisplayToImageSize();				
 			}, null);
 //			if (getTrpSets().getAutoSaveEnabled() && getTrpSets().isCheckForNewerAutosaveFile()) {
 //				autoSaveController.checkForNewerAutoSavedPage(storage.getPage());
@@ -2847,7 +2852,7 @@ public class TrpMainWidget {
 			}, "Loading document from server", false);
 			reloadCurrentPage(true, true, CanvasAutoZoomMode.FIT_WIDTH, () -> {
 				getCanvas().fitWidth();
-				adjustReadingOrderDisplayToImageSize();
+				//adjustReadingOrderDisplayToImageSize();
 			}, null);
 			clearThumbs();
 //			getCanvas().fitWidth();
@@ -3497,13 +3502,13 @@ public class TrpMainWidget {
 		return extArr;
 	}
 	
-	public void addSeveralPages2Doc() {
+	public boolean addSeveralPages2Doc() {
 		logger.debug("Open Dialog for adding images");
 
 		final String[] extArr = getAllowedFilenameExtensions();
 		final ArrayList<String> imgNames = DialogUtil.showOpenFilesDialog(getShell(), "Select image files to add", null, extArr);
 		if (imgNames == null)
-			return;
+			return false;
 
 		try {
 			int pageNr = storage.getNPages();
@@ -3518,11 +3523,12 @@ public class TrpMainWidget {
 				
 				if (docId == -2){
 					DialogUtil.showInfoMessageBox(mw.getShell(), "No document loaded", "Page(s) can not be added - there is no remote document loaded");
-					return;
+					return false;
 				}
 				
-				if (!imgFile.canRead())
+				if (!imgFile.canRead()) {
 					throw new Exception("Can't read file at: " + img);
+				}
 				
 				ProgressBarDialog.open(mw.getShell(), new IRunnableWithProgress(){
 
@@ -3547,7 +3553,8 @@ public class TrpMainWidget {
 		} catch (Throwable e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}	
+		}
+		return true;	
 	}
 
 	public void deletePage() {
@@ -3892,8 +3899,7 @@ public class TrpMainWidget {
 				FileUtils.forceMkdir(tempZipFileDir);
 
 				if (exportDiag.isMetsExport())
-					exportDocument(tempZipFileDir, pageIndices, exportDiag.isImgExport(), exportDiag.isPageExport(), exportDiag.isAltoExport(),
-							exportDiag.isSplitUpWords(), wordBased, commonPars.getFileNamePattern(), commonPars.getRemoteImgQuality(), cache);
+					exportDocument(tempZipFileDir, commonPars, cache);
 				if (exportDiag.isPdfExport())
 					exportPdf(new File(tempZipDirParent + "/" + dir.getName() + ".pdf"), pageIndices, exportDiag.isAddExtraTextPages2PDF(),
 							exportDiag.isExportImagesOnly(), exportDiag.isHighlightTags(), exportDiag.isHighlightArticles(), wordBased, doBlackening, createTitle, cache, exportDiag.getFont(), pdfPars.getPdfImgQuality());
@@ -3941,8 +3947,8 @@ public class TrpMainWidget {
 
 			if (doMetsExport) {
 
-				exportDocument(metsExportDir, pageIndices, exportDiag.isImgExport(), exportDiag.isPageExport(), exportDiag.isAltoExport(),
-						exportDiag.isSplitUpWords(), exportDiag.isWordBased(), commonPars.getFileNamePattern(), commonPars.getRemoteImgQuality(), cache);
+				//exportDocument(metsExportDir, pageIndices, exportDiag.isImgExport(), exportDiag.isPageExport(), exportDiag.isAltoExport(), exportDiag.isSplitUpWords(), exportDiag.isWordBased(), commonPars.getFileNamePattern(), commonPars.getRemoteImgQuality(), cache);
+				exportDocument(metsExportDir, commonPars, cache);
 				if (exportDiag.isPageExport()) {
 					if (exportFormats != "") {
 						exportFormats += " and ";
@@ -4060,7 +4066,39 @@ public class TrpMainWidget {
 		}
 
 	}
+	
+	public void exportDocument(final File dir, CommonExportPars commonPars, ExportCache cache) throws Throwable {
+		try {
 
+			if (dir == null)
+				return;
+
+			String what = "Images" + (commonPars.isDoExportPageXml() ? ", PAGE" : "") + (commonPars.isDoExportAltoXml() ? ", ALTO" : "");
+			lastExportFolder = dir.getParentFile().getAbsolutePath();
+			commonPars.setDir(dir.getAbsolutePath());
+			commonPars.setUseOcrMasterDir(false);
+			ProgressBarDialog.open(getShell(), new IRunnableWithProgress() {
+				@Override public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+					try {
+						logger.debug("exporting document...");
+						final String path = storage.exportDocument(commonPars, monitor, cache);
+						monitor.done();
+						// displaySuccessMessage("Written export to "+path);
+					} catch (Exception e) {
+						throw new InvocationTargetException(e, e.getMessage());
+					}
+				}
+			}, "Exporting document files: " + what, false);
+		} catch (Throwable e) {
+			onError("Export error", "Error during export of document", e);
+			throw e;
+		}
+	}
+
+	/*
+	 * use the commonPars instead
+	 */
+	@Deprecated
 	public void exportDocument(final File dir, final Set<Integer> pageIndices, final boolean exportImg, final boolean exportPage, final boolean exportAlto,
 			final boolean splitIntoWordsInAlto, final boolean useWordLayer, final String fileNamePattern, final ImgType imgType, ExportCache cache) throws Throwable {
 		try {
@@ -4541,6 +4579,8 @@ public class TrpMainWidget {
 			} catch (IOException e) {
 				if (!e.getMessage().equals("stream is closed")) {
 					TrpMainWidget.getInstance().onError("IO-Error during update", "Error during update: \n\n" + e.getMessage(), e);
+				} else {
+					logger.error("Program update could not be downloaded or installed.", e);
 				}
 			} catch (Throwable e) {
 				TrpMainWidget.getInstance().onError("Error during update", "Error during update: \n\n" + e.getMessage(), e);
@@ -4752,9 +4792,7 @@ public class TrpMainWidget {
 	}
 
 	public void openSearchDialog() {
-//		SebisStopWatch.SW.start();
 		checkSession(true);
-//		SebisStopWatch.SW.stop(true);
 		if (!storage.isLoggedIn()) {
 			logger.debug("not logged in!");
 			return;
@@ -4776,6 +4814,33 @@ public class TrpMainWidget {
 		else{		
 			searchDiag = new SearchDialog(getShell());
 			searchDiag.open();
+		}
+	}
+	
+	public void openDocumentManager() {
+		checkSession(true);
+		if (!storage.isLoggedIn()) {
+			return;
+		}
+		
+		if (docManDiag!=null && !SWTUtil.isDisposed(docManDiag.getShell())) {
+			docManDiag.getShell().setVisible(true);
+			SWTUtil.centerShell(docManDiag.getShell());
+		} else {
+			docManDiag = new DocumentManager(getShell());
+			docManDiag.open();
+		}
+	}
+	
+	public void reloadDocumentManager() {
+		if (docManDiag != null && !SWTUtil.isDisposed(docManDiag.getShell()) && docManDiag.getShell().isVisible()){
+			docManDiag.totalReload(ui.getServerWidget().getSelectedCollectionId());
+		}		
+	}
+	
+	public void closeDocumentManager() {
+		if (docManDiag != null && !SWTUtil.isDisposed(docManDiag.getShell()) && docManDiag.getShell().isVisible()) {
+			docManDiag.getShell().close();
 		}
 	}
 	
@@ -4806,9 +4871,11 @@ public class TrpMainWidget {
 			List<TrpEvent> events = storage.getEvents();
 			for (TrpEvent ev : events) {
 				final String msg = CoreUtils.newDateFormatUserFriendly().format(ev.getDate()) + ": " + ev.getTitle() + "\n\n" + ev.getMessage();
-				Pair<Integer, Boolean> ret = DialogUtil.showMessageDialogWithToggle(getShell(), "Notification", msg, "Do not show this message again", false,
-						SWT.NONE, "OK");
-				boolean doNotShowAgain = ret.getRight();
+				MessageDialogWithToggle eventDialog = new MessageDialogStyledWithToggle(getShell(), "Notification", null, msg, MessageDialog.INFORMATION, 
+						new String[] { "OK" }, 0, "Do not show this message again", false);
+				int ret = eventDialog.open();
+				logger.debug("User choice was button: {}", ret);
+				boolean doNotShowAgain = eventDialog.getToggleState();
 				logger.debug("Do not show again = " + doNotShowAgain);
 				if (doNotShowAgain) {
 					storage.markEventAsRead(ev.getId());
@@ -5316,12 +5383,14 @@ public class TrpMainWidget {
 		String ht = ""
 //				+ "Canvas shortcut operations:\n"
 				+ "- esc: set selection mode\n"
+				+ "- hold down either the left mouse button on an empty image area or the right mouse button to move the image\n"
 				+ "- shift + drag-on-bounding-box: resize shape on bounding box\n"
 				+ "- shift + drag shape: move shape including all its child shapes\n"
+				+ "- ctrl/cmd + selecting shapes: select multiple shapes\n"
+				+ "- ctrl/cmd + dragging shape(s): move multiple selected shapes\n"
 				+ "- right click on a shape: context menu with additional operations\n"
 				+ "  (note: on mac touchpads, right-clicks are performed using two fingers simultaneously)"
 				;
-		
 		
 		int res = DialogUtil.showMessageDialog(getShell(), "Canvas shortcut operations", ht, null, MessageDialog.INFORMATION, 
 				new String[] {"OK"}, 0);
@@ -5504,20 +5573,23 @@ public class TrpMainWidget {
 				listOfDocIdsOfRunningJobs.add(job.getDocId());
 			}
 		} catch (SessionExpiredException | ServerErrorException | IllegalArgumentException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.error("Could not query unfinished jobs.", e1);
 		}
 		
 		int N = docs.size();
 		
 		if (N > 1) {
-			String msg = reallyDelete ? "Do you really want to delete " + N + " selected documents irreversible? " : "Do you really want to delete " + N + " selected documents?" + "\nAfter deletion you can find your documents in the recycle bin!";
+			String msg = reallyDelete ? "Do you really want to delete " + N + " selected documents irreversible? " : "Do you really want to delete " + N + " selected documents?\n" 
+					+ "After deletion you can find your documents in the recycle bin.\n"
+					+ "Documents in the recycle bin are automatically discarded after two weeks.";
 			if (DialogUtil.showYesNoDialog(getShell(), "Delete Documents", msg)!=SWT.YES) {
 				return false;
 			}
 		}
 		else{
-			String msg = reallyDelete ? "Do you really want to delete document '"+docs.get(0).getTitle()+"' irreversible?" : "Do you really want to delete document '"+docs.get(0).getTitle()+"'\nAfter deletion you can find your document in the recycle bin!";
+			String msg = reallyDelete ? "Do you really want to delete document '"+docs.get(0).getTitle()+"' irreversible?" : "Do you really want to delete document '"+docs.get(0).getTitle()+"'?\n"
+					+ "After deletion you can find your document in the recycle bin!\n"
+					+ "Documents in the recycle bin are automatically discarded after two weeks.";
 			if (DialogUtil.showYesNoDialog(getShell(), "Delete Document", msg)!=SWT.YES) {
 				return false;
 			}
@@ -5539,7 +5611,7 @@ public class TrpMainWidget {
 						logger.debug("deleting document: "+d);
 						
 						if (listOfDocIdsOfRunningJobs.contains(d.getDocId())){
-							String errorMsg = "Already delete job running for document: "+d.getDocId();
+							String errorMsg = "A job is currently running on document: "+d.getDocId();
 							logger.warn(errorMsg);
 							error.add(errorMsg);
 						}
@@ -6034,7 +6106,7 @@ public class TrpMainWidget {
 			logger.debug("clearing tags from selection!");
 			ATranscriptionWidget aw = ui.getSelectedTranscriptionWidget();
 			if (aw==null) {
-				logger.debug("no transcription widget selected - doin nothing!");
+				logger.debug("no transcription widget selected - doing nothing!");
 				return;
 			}
 			
@@ -6119,13 +6191,70 @@ public class TrpMainWidget {
 	}
 	
 	public void changeVersionStatus(String text, TrpPage page) {
-		if (EditStatus.fromString(text).equals(EditStatus.NEW)){
-			//New is only allowed for the first transcript
-			DialogUtil.showInfoMessageBox(getShell(), "Status 'New' reserved for first transcript", "Only the first transcript can be 'New', all others must be at least 'InProgress'");
+		
+		/*
+		 * new strategy for status change
+		 * 1) change the status if it makes sense and is allowed
+		 * 2) if so - save as new version with the new status
+		 */
+		
+		//is the page the one currently loaded in Transkribus
+		boolean isLoaded = (page.getPageId() == Storage.getInstance().getPage().getPageId());
+        //then only the latest transcript can be changed -> page.getCurrentTranscript() gives the latest of this page
+		boolean isLatestTranscript = (page.getCurrentTranscript().getTsId() == Storage.getInstance().getTranscriptMetadata().getTsId());
+		
+		TrpTranscriptMetadata trMd = Storage.getInstance().getTranscript().getMd();
+		if (trMd.getStatus().equals(EditStatus.fromString(text))){
+			DialogUtil.showInfoMessageBox(getShell(), "Status stays the same", "The chosen status " + EditStatus.fromString(text) + " is the same as the old!");
+			return;
+		}
+			
+		if (isLoaded && !isLatestTranscript){
+			DialogUtil.showInfoMessageBox(getShell(), "Status change not allowed", "Status change is only allowed for the latest transcript. Load the latest transcript or save the current transcript.");
+			ui.getStatusCombo().setText(storage.getTranscriptMetadata().getStatus().getStr());
+			ui.getStatusCombo().redraw();
+			return;
+			//logger.debug("page is loaded with transcript ID " + Storage.getInstance().getTranscriptMetadata().getTsId());
+		}
+		
+		if (!AuthUtils.canTranscribe(storage.getRoleOfUserInCurrentCollection())) { // not allowed
+			DialogUtil.showInfoMessageBox(getShell(), "No authorization to change status", "No authorization to change status - keep current status");
+			ui.getStatusCombo().setText(storage.getTranscriptMetadata().getStatus().getStr());
+			ui.getStatusCombo().redraw();
 			return;
 		}
 		
-		int colId = Storage.getInstance().getCollId();
+		if(EditStatus.fromString(text).getValue() >= EditStatus.FINAL.getValue() && !AuthUtils.canManage(storage.getRoleOfUserInCurrentCollection())){
+			DialogUtil.showInfoMessageBox(getShell(), "No authorization to change status", "Status 'Final' and 'GT' can only be set by editors or the owner - keep current status");
+			ui.getStatusCombo().setText(storage.getTranscriptMetadata().getStatus().getStr());
+			ui.getStatusCombo().redraw();
+			return;
+		}
+		
+		if (EditStatus.fromString(text).equals(EditStatus.NEW)){
+			//New is only allowed for the first transcript
+			DialogUtil.showInfoMessageBox(getShell(), "Status 'New' reserved for first transcript", "Only the first transcript can be 'New' - please use another status!");
+			ui.getStatusCombo().setText(storage.getTranscriptMetadata().getStatus().getStr());
+			ui.getStatusCombo().redraw();
+			return;
+		}
+		
+		//set new status and save as new version (includes all transcript changes as well)
+		trMd.setStatus(EditStatus.fromString(text));
+		saveTranscription(false);
+		
+		//this would show another request to the user if he wants to save - too much in my opinion
+		//saveTranscriptDialogOrAutosave();
+			
+		
+
+		/*
+		 * 
+		 * old solution: directly change the status in the database
+		 * no check if the transcript has changed. Therefore the version before the transcript was saved got e.g. status GT
+		 */
+		
+/*		int colId = Storage.getInstance().getCollId();
 		//is the page the one currently loaded in Transkribus
 		boolean isLoaded = (page.getPageId() == Storage.getInstance().getPage().getPageId());
         //then only the latest transcript can be changed -> page.getCurrentTranscript() gives the latest of this page
@@ -6182,16 +6311,21 @@ public class TrpMainWidget {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 		
 	}
 
-	public void changeVersionStatus(String text, List<TrpPage> pageList) {
+	public boolean changeVersionStatus(String text, List<TrpPage> pageList) {
+		
+		int r = DialogUtil.showYesNoCancelDialog(getShell(), "Change status of pages", "Do you want to update the status of the selected pages of this document with the chosen status: " + text);
+		if (r != SWT.YES) {
+			return false;
+		}
 		
 		if (EditStatus.fromString(text).equals(EditStatus.NEW)){
 			//New is only allowed for the first transcript
 			DialogUtil.showInfoMessageBox(getShell(), "Status 'New' reserved for first transcript", "Only the first transcript can be 'New', all others must be at least 'InProgress'");
-			return;
+			return false;
 		}
 		
 		Storage storage = Storage.getInstance();
@@ -6269,7 +6403,293 @@ public class TrpMainWidget {
 				updateVersionStatus();
 			}
 		}
+		return true;
 
+	}
+	
+	public boolean setVersionsAsLatest(String text, List<TrpPage> pageList) {
+		
+
+		int r = DialogUtil.showYesNoCancelDialog(getShell(), "Save versions as latest", "Do you want to store all transcript versions with the chosen status or toolname '" + text + "' of this document as the latest versions?");
+		if (r != SWT.YES) {
+			return false;
+		}
+		
+		Storage storage = Storage.getInstance();
+		
+		int colId = Storage.getInstance().getCollId();
+		if (!pageList.isEmpty()) {
+			List<String> msgsNotFound = new ArrayList<String>();
+			List<String> msgsIsLatest = new ArrayList<String>();
+			try {
+				ProgressBarDialog.open(getShell(), new IRunnableWithProgress() {
+					@Override public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+							try{
+
+								monitor.beginTask("Store versions with status or toolname "+text+" as latest.", pageList.size());
+								int c=0;
+								
+								for (TrpPage page : pageList) {
+									
+									if (monitor.isCanceled()){
+										storage.reloadDocWithAllTranscripts();
+										return;
+									}
+
+									int pageNr = page.getPageNr();
+									int docId = page.getDocId();
+									
+									TrpTranscriptMetadata transcript = null;
+									if ((pageNr - 1) >= 0) {
+										transcript = page.getTranscriptWithStatusOrNull(text);
+										if (transcript == null){
+											logger.debug("For page " + page.getPageNr() + " the transcript was not found" + System.lineSeparator());
+											if (msgsNotFound.isEmpty()) {
+												msgsNotFound.add(""+ page.getPageNr()); 
+											}
+											else {
+												msgsNotFound.add(", " + page.getPageNr());
+											}
+											
+											continue;
+										}
+										
+										if (page.getCurrentTranscript().equals(transcript)) {
+											logger.debug("For page " + page.getPageNr() + " the transcript with this status/toolname is already the latest" + System.lineSeparator());
+											//Todo: show user message dialog with this info
+											if (msgsIsLatest.isEmpty()) {
+												msgsIsLatest.add(""+ page.getPageNr()); 
+											}
+											else {
+												msgsIsLatest.add(", " + page.getPageNr());
+											}
+											continue;
+										}
+											
+									}
+									
+									storage.getConnection().updateTranscript(colId, docId, pageNr, transcript.getStatus(), transcript.unmarshallTranscript(), transcript.getParentTsId(), transcript.getToolName());
+									
+									monitor.subTask("Page " + ++c + "/" + pageList.size() );
+									monitor.worked(c);
+																	
+								}
+								
+								storage.reloadDocWithAllTranscripts();
+								
+							} catch (SessionExpiredException | ServerErrorException | ClientErrorException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} catch (IllegalArgumentException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+//							} catch (NoConnectionException e) {
+//								// TODO Auto-generated catch block
+//								e.printStackTrace();
+							} catch (Exception e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+
+					}
+				}, "Storing transcripts as latest", true);
+			} catch (Throwable e) {
+				TrpMainWidget.getInstance().onError("Error storing transcripts as latest", e.getMessage(), e, true, false);
+			}
+			finally{
+				for (TrpPage page : pageList) {
+					//reload the page in the GUI if status has changed
+					if (page.getPageId() == Storage.getInstance().getPage().getPageId()) {
+						reloadCurrentPage(true, null, null);
+						break;
+					}
+				}
+				updateVersionStatus();
+			}
+			if (!msgsNotFound.isEmpty() || !msgsIsLatest.isEmpty()) {
+				String pageString1 = "";
+				String pageString2 = "";
+				
+				for (String msgNotFound : msgsNotFound) {
+					pageString1 += msgNotFound;
+				}
+				for (String msgIsLatest : msgsIsLatest) {
+					pageString2 += msgIsLatest;
+				}
+				String info1 = "For following pages there is no transcript with the chosen status/toolname' " + text + "': " + pageString1 + System.lineSeparator();
+				String info2 = "For following pages the transcript with the chosen status/toolname '" + text + "' is already the latest: " + pageString2 + System.lineSeparator();
+				DialogUtil.showInfoMessageBox(getShell(), "Summary of storing transcripts as latest", info2+info1);
+			}
+			return true;
+		}
+			
+		else {
+			return false;
+		}
+		
+
+	}
+	
+	public void undoJob(TrpJobStatus job) {
+			
+		try {
+			
+			String pagesStr = job.getPages();
+			logger.debug("undo job for pages " + pagesStr);
+			
+			if (DialogUtil.showYesNoDialog(mw.getShell(), "Undo job", "Do you really want to undo this job and reset these pages: " + pagesStr )!=SWT.YES) {
+				return;
+			}
+
+			Set<Integer> noReset = new HashSet<Integer>();
+			Set<Integer> pageIndices = CoreUtils.parseRangeListStr(pagesStr, Integer.MAX_VALUE);
+			//get doc to have all transcripts for all pages available to change
+			Storage storage = Storage.getInstance();
+			//to get all transcripts
+			TrpDoc currDoc = storage.getRemoteDoc(storage.getCurrentDocumentCollectionId(), job.getDocId(), -1);
+
+//			for (Integer i : pageIndices) {
+//				logger.debug(" page as Integer " + i);
+//			}
+			
+			Set<String> debugMessages = new HashSet<String>();
+			
+			ProgressBarDialog.open(getShell(), new IRunnableWithProgress() {
+				@Override public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+					try {
+						monitor.beginTask("Undo the job: affected pages: " + pageIndices.size(), pageIndices.size());
+						int i = 1;
+						for (TrpPage page : currDoc.getPages()) {
+							monitor.subTask("Undo page " + page.getPageNr());
+
+							int pageIdx = -1;
+							if (page.getPageNr() > 0) {
+								pageIdx = page.getPageNr()-1;
+							}
+
+							if (!pageIndices.contains(pageIdx)) {
+								logger.debug("this page nr " + pageIdx + " is not contained in job pages!");
+								continue;
+							}
+							else{
+								logger.debug("this page nr " + pageIdx + " is contained in job pages!");
+							}
+											
+							TrpTranscriptMetadata jobTranscript = page.getTranscriptByJobId(job.getJobIdAsInt());
+							TrpTranscriptMetadata latestTranscript = page.getCurrentTranscript();
+							TrpTranscriptMetadata parentTranscript = null;
+							if (jobTranscript != null && latestTranscript != null && (jobTranscript.getTsId() == latestTranscript.getTsId()) ) {
+								//for 'OcrModule' job no parent available - in that case use the previous transcript
+								if (job.getModuleName().equals("OcrModule")) {
+									//is second youngest transcript
+									parentTranscript = page.getTranscriptInCreationHistoryAtPosition(1);
+								}
+								else {
+									parentTranscript = page.getTranscriptById(jobTranscript.getParentTsId());
+								}
+							}
+							else {
+								logger.debug("No reset possible: probably no jobId in transcript or the transcript of the job is not the latest!");
+								debugMessages.add("Page: " + page.getPageNr() + " - no reset possible: probably no jobId in transcript or the transcript of the job is not the latest!" + System.lineSeparator());
+								noReset.add(page.getPageNr());
+								continue;
+							}
+
+							//if there is a toolname != null we can revert the job of that tool
+							if(parentTranscript != null){
+								logger.debug("parent exists - set current version to version of parent!");
+								debugMessages.add("Page: " + page.getPageNr() + " - parent exists, set current version to version of parent!" + System.lineSeparator());
+								JAXBPageTranscript tr = new JAXBPageTranscript(parentTranscript);
+								tr.build();
+								storage.getConnection().updateTranscript(storage.getCurrentDocumentCollectionId(), parentTranscript.getDocId(), parentTranscript.getPageNr(), parentTranscript.getStatus(), tr.getPageData(), parentTranscript.getParentTsId(), "job undone: job ID " + job.getJobId());
+								
+							}
+							else {
+								if (parentTranscript == null) {
+									logger.debug("no parent/predecessor found - no reset!!");
+									debugMessages.add("Page: " + page.getPageNr() + " - no parent/predecessor found, no reset!" + System.lineSeparator());
+									noReset.add(page.getPageNr());
+									continue;
+								}
+							}
+							
+							//for loaded page do a reload: does not work since because it runs in a separate thread and there are some resource conflicts
+//							if (storage.getPage().getPageId() == page.getPageId()){
+//								logger.debug("page id = " + storage.getPage().getPageId());
+//								Storage.getInstance().setLatestTranscriptAsCurrent();
+//								mw.reloadCurrentPage(true);
+//							}
+
+							if (monitor.isCanceled())
+								throw new InterruptedException();
+
+							monitor.worked(i + 1);
+							++i;
+						}
+					} catch (InterruptedException ie) {
+						throw ie;
+					} catch (Exception e) {
+						throw new InvocationTargetException(e, e.getMessage());
+					}
+				}
+			}, "Undo selected job", true);
+			
+			String message = noReset.size() > 0? "Not all pages of the job (" + pageIndices.size() + " pages) could be undone" : "All pages of the job were undone";
+			String detailMessage = noReset.size() > 0? "The following pages of the job could not be undone: " + CoreUtils.getRangeListStrFromSet(noReset) : "All pages of the job were undone - in total " + pageIndices.size() + " pages.";
+			//TrpMessageDialog.showInfoDialog(getShell(), "Undo feedback", message, detailMessage, null);
+			detailMessage = detailMessage.concat(System.lineSeparator());
+			
+			Iterator it = debugMessages.iterator();
+			while (it.hasNext()) {
+				detailMessage += it.next();
+			}
+			
+//			for (int i = 0; i < 1000; i++) {
+//				detailMessage += "test " +i + System.lineSeparator();
+//			}
+			
+			TrpMessageDialog.showInfoDialog(getShell(), "Undo feedback", message, detailMessage, null);
+			
+			try {
+				storage.reloadDocWithAllTranscripts();
+				reloadCurrentPage(true, true, CanvasAutoZoomMode.FIT_WIDTH, () -> {
+					if (getTrpSets().getAutoSaveEnabled() && getTrpSets().isCheckForNewerAutosaveFile()) {
+						autoSaveController.checkForNewerAutoSavedPage(storage.getPage());
+					}
+					getCanvas().fitWidth();
+					//adjustReadingOrderDisplayToImageSize();				
+				}, null);
+
+			} catch (SessionExpiredException | ClientErrorException | IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			//DialogUtil.showInfoMessageBox(getShell(), "Undo feedback", detailMessage);
+			//DialogUtil.showCustomMessageDialog(getShell(), "Undo feedback", detailMessage, null, SWT.ICON_INFORMATION | SWT.V_SCROLL, new String[] {"OK"}, 0, null);
+			
+			//DialogUtil.showInfoMessageBox(getShell(), "Undo feedback", detailMessage);
+			
+		} catch (SessionExpiredException | ServerErrorException | ClientErrorException
+				| IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoConnectionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		finally{
+
+		}
 	}
 
 	public void revertVersions() {
@@ -6376,10 +6796,9 @@ public class TrpMainWidget {
 		ArrayList<String> refText = new ArrayList<String>();
 		ArrayList<String> hypText = new ArrayList<String>();
 
-		TrpPageType refPage = (TrpPageType) ref.unmarshallTranscript().getPage();
-		TrpPageType hypPage = (TrpPageType) hyp.unmarshallTranscript().getPage();
-
 		if (ref != null && hyp != null) {
+			TrpPageType refPage = (TrpPageType) ref.unmarshallTranscript().getPage();
+			TrpPageType hypPage = (TrpPageType) hyp.unmarshallTranscript().getPage();			
 			
 			int i = 1;
 			int j = 1;
@@ -6513,10 +6932,10 @@ public class TrpMainWidget {
 		}
 	}
 
-	public void duplicateGtToDocument(TrpCollection col, GroundTruthSelectionDescriptor desc, String title) throws SessionExpiredException, ServerErrorException, ClientErrorException, IllegalArgumentException {
+	public void duplicateGtToDocument(int sourceColId, TrpCollection targetCol, GroundTruthSelectionDescriptor desc, String title) throws SessionExpiredException, ServerErrorException, ClientErrorException, IllegalArgumentException {
 		List<GroundTruthSelectionDescriptor> descList = new ArrayList<>(1);
 		descList.add(desc);
-		String jobId = storage.getConnection().duplicateGtToDocument(col.getColId(), descList, title, null);
+		String jobId = storage.getConnection().duplicateGtToDocument(sourceColId, targetCol.getColId(), descList, title, null);
 		registerJobStatusUpdateAndShowSuccessMessage(jobId);
 	}
 	
@@ -6530,5 +6949,17 @@ public class TrpMainWidget {
 			rids.add(st.getId());
 		}
 		return rids;
-	}	
+	}
+	
+	public void openCreditManager(TrpCollection collection) {
+		if (creditManagerDialog != null) {
+			creditManagerDialog.setVisible();
+		} else {
+			creditManagerDialog = new CreditManagerDialog(mw.getShell(), collection, storage.isAdminLoggedIn());
+			if (creditManagerDialog.open() == IDialogConstants.OK_ID) {
+				//we don't need feedback here. do nothing
+			}
+			creditManagerDialog = null;
+		}
+	}
 }

@@ -67,6 +67,7 @@ public class CanvasSettings extends APropertyChangeSupport  {
 		private Font fontTahoma30 = resManager.createFont(FontDescriptor.createFrom(new FontData("Tahoma", (int) (30), SWT.BOLD)));
 		private Font fontTahoma50 = resManager.createFont(FontDescriptor.createFrom(new FontData("Tahoma", (int) (50), SWT.BOLD)));
 		private Font fontArial10 = resManager.createFont(FontDescriptor.createFrom(new FontData("Arial", 10, SWT.NONE)));
+		private static Font currentFont;
 		
 		private int drawLineWidth = 1;
 		public static final String DRAW_LINE_WIDTH_PROPERTY="drawLineWidth";
@@ -89,7 +90,7 @@ public class CanvasSettings extends APropertyChangeSupport  {
 		private int foregroundAlpha = 255;
 		public final static String FOREGROUND_ALPHA_PROPERY = "foregroundAlpha";
 		
-		private int readingOrderCircleWidth = 90;
+		private int readingOrderCircleWidth = 60;
 		public final static String READING_ORDER_PROPERTY = "readingOrderCircleWidth";
 		
 		private int lineStyle = SWT.LINE_SOLID;
@@ -409,6 +410,14 @@ public class CanvasSettings extends APropertyChangeSupport  {
 			return fontTahoma22;
 			
 		}
+		
+		public int getFontHeight(Font theFont) {
+			FontData[] fd = theFont.getFontData();
+			for (FontData fds : fd){
+				return fds.getHeight();
+			}
+			return 0;	
+		}
 
 		public Color getReadingOrderBackgroundColor() {
 			return readingOrderBackgroundColor;
@@ -416,6 +425,19 @@ public class CanvasSettings extends APropertyChangeSupport  {
 
 		public int getReadingOrderCircleWidth() {
 			return readingOrderCircleWidth;
+		}
+		
+		public Font createFont(int height, boolean bold) {
+			int style = bold ? SWT.BOLD : SWT.NONE;
+			if (currentFont != null && !currentFont.isDisposed() && getFontHeight(currentFont)==height) {
+				//System.out.println("return already created font");
+				return currentFont;
+			}
+			else {
+				//System.out.println("create new font");
+				currentFont = resManager.createFont(FontDescriptor.createFrom(new FontData("Tahoma", height, style)));
+			}
+			return currentFont;
 		}
 
 		public void setReadingOrderCircleWidth(int readingOrderCircleWidth) {

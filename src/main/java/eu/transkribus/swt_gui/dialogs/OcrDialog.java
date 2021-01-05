@@ -3,6 +3,7 @@ package eu.transkribus.swt_gui.dialogs;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -20,19 +21,24 @@ import org.eclipse.swt.widgets.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.transkribus.core.model.beans.DocSelection;
 import eu.transkribus.core.model.beans.enums.ScriptType;
 import eu.transkribus.core.util.CoreUtils;
 import eu.transkribus.core.util.FinereaderUtils;
 import eu.transkribus.swt.util.DialogUtil;
 import eu.transkribus.swt_gui.mainwidget.storage.Storage;
+import eu.transkribus.swt_gui.util.CurrentTranscriptOrDocPagesOrCollectionSelector;
 import eu.transkribus.swt_gui.util.DocPagesSelector;
 import eu.transkribus.util.OcrConfig;
 
 public class OcrDialog extends Dialog {
 	private static final Logger logger = LoggerFactory.getLogger(OcrDialog.class);
 	
-	private Button thisPageBtn, severalPagesBtn;
-	private DocPagesSelector dps;
+	//private Button thisPageBtn, severalPagesBtn;
+	
+	private boolean docsSelected = false;
+	private List<DocSelection> selectedDocSelections;
+	private CurrentTranscriptOrDocPagesOrCollectionSelector dps;
 	private Combo typeFaceCombo;
 	private Table langTab;
 	private Label langStrLbl;
@@ -58,27 +64,29 @@ public class OcrDialog extends Dialog {
 		Composite cont = (Composite) super.createDialogArea(parent);
 		cont.setLayout(new GridLayout(3, false));
 		
-		thisPageBtn = new Button(cont, SWT.RADIO);
-		thisPageBtn.setText("On this page");
-		thisPageBtn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
-		thisPageBtn.setSelection(true);
+//		thisPageBtn = new Button(cont, SWT.RADIO);
+//		thisPageBtn.setText("On this page");
+//		thisPageBtn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+//		thisPageBtn.setSelection(true);
+//		
+//		severalPagesBtn = new Button(cont, SWT.RADIO);
+//		severalPagesBtn.setText("Pages:");
+//		severalPagesBtn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+//		
+//		dps = new DocPagesSelector(cont, SWT.NONE, false, store.getDoc().getPages());
+//		dps.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+//		dps.setEnabled(false);
+//		
+//		severalPagesBtn.addSelectionListener(new SelectionAdapter() {
+//			@Override
+//			public void widgetSelected(SelectionEvent e) {
+//				dps.setEnabled(severalPagesBtn.getSelection());
+//			}
+//		});
 		
-		severalPagesBtn = new Button(cont, SWT.RADIO);
-		severalPagesBtn.setText("Pages:");
-		severalPagesBtn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-		
-		dps = new DocPagesSelector(cont, SWT.NONE, false, store.getDoc().getPages());
-		dps.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		dps.setEnabled(false);
-		
-		severalPagesBtn.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				dps.setEnabled(severalPagesBtn.getSelection());
-			}
-		});
-		
-		
+		dps = new CurrentTranscriptOrDocPagesOrCollectionSelector(cont, SWT.NONE, true, true, true);		
+		dps.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false, 3, 1));
+
 		Label typeFaceLbl = new Label(cont, SWT.NONE);
 		typeFaceLbl.setText("Type Face:");
 		
@@ -161,23 +169,32 @@ public class OcrDialog extends Dialog {
 	
 	@Override
 	protected void okPressed() {
-		if(thisPageBtn.getSelection()) {
+		
+		if(dps.isCurrentTranscript()) {
 			pages = ""+store.getPage().getPageNr();
-		} else if(severalPagesBtn.getSelection()) {
-			pages = dps.getPagesText().getText();
+		} else if(!dps.isDocsSelection()) {
+			pages = dps.getPagesStr();
+			if(pages == null || pages.isEmpty()) {
+				DialogUtil.showErrorMessageBox(this.getParentShell(), "Error", "Please specify pages for recognition.");
+				return;
+			}
+			
+			try {
+				CoreUtils.parseRangeListStr(pages, store.getDoc().getNPages());
+			} catch (IOException e) {
+				DialogUtil.showErrorMessageBox(this.getParentShell(), "Error", "Page selection is invalid.");
+				return;
+			}
+		} else {
+			docsSelected = dps.isDocsSelection();
+//			selectedDocDescriptors = dps.getDocumentsSelected();
+			selectedDocSelections = dps.getDocSelections();
+			if(CollectionUtils.isEmpty(selectedDocSelections)) {
+				DialogUtil.showErrorMessageBox(this.getParentShell(), "Error", "No documents selected for recognition.");
+				return;
+			}
 		}
 		
-		if(pages == null || pages.isEmpty()) {
-			DialogUtil.showErrorMessageBox(this.getParentShell(), "Error", "Please specify pages for recognition.");
-			return;
-		}
-		
-		try {
-			CoreUtils.parseRangeListStr(pages, store.getDoc().getNPages());
-		} catch (IOException e) {
-			DialogUtil.showErrorMessageBox(this.getParentShell(), "Error", "Page selection is invalid.");
-			return;
-		}
 		logger.debug("Type face = " + typeFaceCombo.getText());
 		config.setTypeFace(ScriptType.fromString(typeFaceCombo.getText()));
 		
@@ -213,6 +230,14 @@ public class OcrDialog extends Dialog {
 	
 	public OcrConfig getConfig() {
 		return this.config;
+	}
+	
+	public boolean isDocsSelection(){
+		return docsSelected;
+	}
+	
+	public List<DocSelection> getDocs() {
+		return selectedDocSelections;
 	}
 	
 	public String getPages() {

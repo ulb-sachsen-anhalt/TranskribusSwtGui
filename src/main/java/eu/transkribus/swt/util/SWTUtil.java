@@ -382,10 +382,6 @@ public class SWTUtil {
 //		return d;
 //	}
 	
-//	public static boolean isOpen(Dialog d, Shell s) {
-//		return d != null && !isDisposed(s);
-//	}
-		
 	public static boolean isOpen(org.eclipse.jface.dialogs.Dialog d) {
 		return d != null && d.getShell() != null && !d.getShell().isDisposed();
 	}
@@ -1232,7 +1228,7 @@ public class SWTUtil {
 	 * Given an arbitrary point, get the point with the given transform.
 	 * @param af affine transform
 	 * @param pt point to be transformed
-	 * @return point after tranform
+	 * @return point after transform
 	 */
 	public static Point transformPoint(AffineTransform af, Point pt) {
 		Point2D src = new Point2D.Float(pt.x, pt.y);

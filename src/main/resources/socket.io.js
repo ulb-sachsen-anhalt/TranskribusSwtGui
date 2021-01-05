@@ -1435,7 +1435,7 @@
   Transport.prototype.onClose = function () {
     var self = this;
 
-    /* FIXME: reopen delay causing a infinit loop
+    /* FIXME: reopen delay causing a infinite loop
     this.reopenTimeout = setTimeout(function () {
       self.open();
     }, this.socket.options['reopen delay']);*/
@@ -2045,7 +2045,7 @@
 
   /**
    * Creates a new namespace, by proxying the request to the socket. This
-   * allows us to use the synax as we do on the server.
+   * allows us to use the syntax as we do on the server.
    *
    * @api public
    */
@@ -2836,7 +2836,7 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
     if (WebSocket.__flash) return;
     
     if (WebSocket.__swfLocation) {
-      // For backword compatibility.
+      // For backward compatibility.
       window.WEB_SOCKET_SWF_LOCATION = WebSocket.__swfLocation;
     }
     if (!window.WEB_SOCKET_SWF_LOCATION) {
@@ -2985,7 +2985,7 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
   /**
    * XHR constructor
    *
-   * @costructor
+   * @constructor
    * @api public
    */
 
@@ -3197,7 +3197,7 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
    * The HTMLFile transport creates a `forever iframe` based transport
    * for Internet Explorer. Regular forever iframe implementations will 
    * continuously trigger the browsers buzy indicators. If the forever iframe
-   * is created inside a `htmlfile` these indicators will not be trigged.
+   * is created inside a `htmlfile` these indicators will not be triggered.
    *
    * @constructor
    * @extends {io.Transport.XHR}
@@ -3474,7 +3474,7 @@ var swfobject=function(){var D="undefined",r="object",S="Shockwave Flash",W="Sho
   };
 
   /**
-   * Webkit based browsers show a infinit spinner when you start a XHR request
+   * Webkit based browsers show a infinite spinner when you start a XHR request
    * before the browsers onload event is called so we need to defer opening of
    * the transport until the onload event is called. Wrapping the cb in our
    * defer method solve this.

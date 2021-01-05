@@ -4,15 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.dea.fimgstoreclient.beans.ImgType;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.slf4j.Logger;
@@ -23,6 +25,7 @@ import eu.transkribus.core.model.beans.PyLaiaHtrTrainConfig;
 import eu.transkribus.core.model.beans.PyLaiaTrainCtcPars;
 import eu.transkribus.core.model.beans.TextFeatsCfg;
 import eu.transkribus.core.model.beans.TrpHtr;
+import eu.transkribus.core.model.beans.TrpPreprocPars;
 import eu.transkribus.core.util.CoreUtils;
 import eu.transkribus.core.util.HtrPyLaiaUtils;
 import eu.transkribus.swt.util.SWTUtil;
@@ -31,36 +34,47 @@ public class PyLaiaTrainingConfComposite extends Composite {
 	private static final Logger logger = LoggerFactory.getLogger(PyLaiaTrainingConfComposite.class);
 	
 	private Text numEpochsTxt, earlyStoppingTxt, learningRateTxt;
+	private Combo imgTypeCombo;
 //	private Text trainSizeTxt;
 	private HtrModelChooserButton baseModelBtn;
 	private Button advancedParsBtn;
 	
 	TextFeatsCfg textFeatsCfg = new TextFeatsCfg();
+	TrpPreprocPars trpPreprocPars = new TrpPreprocPars();
 	PyLaiaCreateModelPars createModelPars = PyLaiaCreateModelPars.getDefault();
 	PyLaiaTrainCtcPars trainCtcPars = PyLaiaTrainCtcPars.getDefault();
 //	int batchSize = PyLaiaTrainCtcPars.DEFAULT_BATCH_SIZE;
 	
 	public PyLaiaTrainingConfComposite(Composite parent, boolean enableBaseModelSelection, int style) {
 		super(parent, style);
-		setLayout(new GridLayout(2, false));
+//		setLayout(new GridLayout(2, false));
+		setLayout(SWTUtil.createGridLayout(1, false, 0, 0));
+
+		ScrolledComposite sc = new ScrolledComposite(this, SWT.V_SCROLL | SWT.H_SCROLL);
+		sc.setLayoutData(new GridData(GridData.FILL_BOTH));
+		sc.setLayout(SWTUtil.createGridLayout(1, false, 0, 0));
 		
-		Label numEpochsLbl = new Label(this, SWT.NONE);
+		Composite content = new Composite(sc, SWT.NONE);
+		content.setLayout(new GridLayout(2, false));
+		content.setLayoutData(new GridData(GridData.FILL_BOTH));
+		
+		Label numEpochsLbl = new Label(content, SWT.NONE);
 		numEpochsLbl.setText("Max-nr. of Epochs:");
-		numEpochsTxt = new Text(this, SWT.BORDER);
+		numEpochsTxt = new Text(content, SWT.BORDER);
 		numEpochsTxt.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		numEpochsTxt.setToolTipText("The maximum number of epochs, if early stopping does not apply");
 		
-		Label earlyStoppingLbl = new Label(this, SWT.NONE);
+		Label earlyStoppingLbl = new Label(content, SWT.NONE);
 		earlyStoppingLbl.setText("Early Stopping: ");
-		earlyStoppingTxt = new Text(this, SWT.BORDER);
+		earlyStoppingTxt = new Text(content, SWT.BORDER);
 		earlyStoppingTxt.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		earlyStoppingTxt.setToolTipText("Stop training early, if model does not improve for this number of epochs");
 		
 		//Base models are not supported for PyLaia yet
 		if(enableBaseModelSelection) {
-			Label baseModelLbl = new Label(this, SWT.NONE);
+			Label baseModelLbl = new Label(content, SWT.NONE);
 			baseModelLbl.setText("Base Model:");		
-			baseModelBtn = new HtrModelChooserButton(this, true, getProvider());
+			baseModelBtn = new HtrModelChooserButton(content, true, getProvider());
 			baseModelBtn.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 		} else {
 			baseModelBtn = null;
@@ -71,23 +85,38 @@ public class PyLaiaTrainingConfComposite extends Composite {
 //		advancedParsGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 //		advancedParsGroup.setLayout(new GridLayout(2, false));
 
-		Label learningRateLbl = new Label(this, SWT.NONE);
+		Label learningRateLbl = new Label(content, SWT.NONE);
 		learningRateLbl.setText("Learning Rate:");
-		learningRateTxt = new Text(this, SWT.BORDER);
+		learningRateTxt = new Text(content, SWT.BORDER);
 		learningRateTxt.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		
-		advancedParsBtn = new Button(this, SWT.PUSH);
+		Label imgTypeLbl = new Label(content, 0);
+		imgTypeLbl.setText("Image type:");
+		imgTypeCombo = new Combo(content, SWT.READ_ONLY | SWT.DROP_DOWN);
+		imgTypeCombo.add("Originals");
+		imgTypeCombo.add("Compressed");
+		imgTypeCombo.select(0);
+		imgTypeCombo.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+		
+		advancedParsBtn = new Button(content, SWT.PUSH);
 		advancedParsBtn.setText("Advanced parameters...");
 		advancedParsBtn.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		SWTUtil.onSelectionEvent(advancedParsBtn, e -> {
-			PyLaiaAdvancedConfDialog d = new PyLaiaAdvancedConfDialog(getShell(), /*batchSize,*/ textFeatsCfg, createModelPars, trainCtcPars);
+			PyLaiaAdvancedConfDialog d = new PyLaiaAdvancedConfDialog(getShell(), /*batchSize,*/ textFeatsCfg, trpPreprocPars, createModelPars, trainCtcPars);
 			if (d.open() == IDialogConstants.OK_ID) {
 //				batchSize = d.getBatchSize();
 				textFeatsCfg = d.getTextFeatsCfg();
+				trpPreprocPars = d.getTrpPreprocPars();
 				createModelPars = d.getModelPars();
 				trainCtcPars = d.getTrainPars();
 //				logger.info("batch size = "+batchSize);
-				logger.info("preprocessing config = "+textFeatsCfg.toSingleLineConfigString());
+				if (textFeatsCfg != null) {
+					logger.info("preprocessing config (textFeats) = "+textFeatsCfg.toSingleLineConfigString());	
+				}
+				if (trpPreprocPars != null) {
+					logger.info("preprocessing config (trp) = "+trpPreprocPars.toJson());	
+				}
+				
 				logger.info("modelPars = "+createModelPars.toSingleLineString());
 				logger.info("trainPars = "+trainCtcPars.toSingleLineString());
 			}
@@ -102,9 +131,9 @@ public class PyLaiaTrainingConfComposite extends Composite {
 
 		setDefaults();
 
-		new Label(this, SWT.NONE);
-		Button resetBtn = new Button(this, SWT.PUSH);
-		resetBtn.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+//		new Label(this, SWT.NONE);
+		Button resetBtn = new Button(content, SWT.PUSH);
+		resetBtn.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		resetBtn.setText("Reset to defaults");
 		resetBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -134,6 +163,12 @@ public class PyLaiaTrainingConfComposite extends Composite {
 //		
 //		AdvancedParametersComposite advComp = new AdvancedParametersComposite(customGrp, params);
 //		advComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+		
+		sc.setContent(content);
+	    sc.setExpandHorizontal(true);
+	    sc.setExpandVertical(true);
+		content.layout();
+	    sc.setMinSize(0, content.computeSize(SWT.DEFAULT, SWT.DEFAULT).y-1);	    
 	}
 	
 	public void setDefaults() {
@@ -147,6 +182,7 @@ public class PyLaiaTrainingConfComposite extends Composite {
 		if(baseModelBtn != null) {
 			baseModelBtn.setModel(null);
 		}
+		imgTypeCombo.select(0);
 	}
 	
 	public List<String> validateParameters(List<String> errorList) {
@@ -175,7 +211,12 @@ public class PyLaiaTrainingConfComposite extends Composite {
 		conf.setProvider(this.getProvider());
 		
 		// important: set advanced preprocessing, model and train pars here, s.t. the "main" pars such as learning rate etc. can override those maybe set also in the advanced dialog... 
-		conf.setTextFeatsCfg(textFeatsCfg);
+		if (trpPreprocPars!=null) {
+			conf.setTrpPreprocPars(trpPreprocPars);
+		}
+		else if (textFeatsCfg != null) {
+			conf.setTextFeatsCfg(textFeatsCfg);	
+		}
 		conf.setCreateModelPars(createModelPars);
 		conf.setTrainCtcPars(trainCtcPars);
 		
@@ -197,6 +238,10 @@ public class PyLaiaTrainingConfComposite extends Composite {
 				logger.debug("No base HTR selected.");
 			}
 		}
+
+		ImgType imgType = imgTypeCombo.getSelectionIndex()==1 ? ImgType.view : ImgType.orig;
+		logger.debug("imgType = "+imgType);
+		conf.setImgType(imgType);
 		
 		return conf;
 	}

@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import eu.transkribus.core.util.CoreUtils;
+import eu.transkribus.swt.util.SWTUtil;
 import eu.transkribus.swt.util.TableViewerUtils;
 
 public abstract class ATableWidgetPagination<T> extends Composite {
@@ -122,7 +123,7 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 	 */
 	public synchronized void loadPage(String propertyName, Object value, boolean refreshFirst) {
 		if (propertyName == null || value == null) {
-			logger.error("propertyName or value is null - doin' nothin'!");
+			logger.error("propertyName or value is null - doing nothing!");
 			return;
 		}
 		PageableController c = pageableTable.getController();
@@ -209,9 +210,119 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 		catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
 			logger.error(e.getMessage(), e);
 		}
+	}
+	
+	
+	/**
+	 * Loads the page that contains the specified property / value pair; if found, the element is selected
+	 * use binary search to make it faster
+	 * TODO: this information could come directly from the database
+	 * 
+	 */
+	public synchronized void loadPage_useBinarySearch(String propertyName, Object value, boolean refreshFirst) {
+		if (propertyName == null || value == null) {
+			logger.error("propertyName or value is null - doing nothing!");
+			return;
+		}
+		PageableController c = pageableTable.getController();
+		if (refreshFirst) {
+			logger.debug("refreshing first...");
+			pageableTable.refreshPage(true);
+		}
 		
-		
-		
+		logger.debug("loading page, propertyName = "+propertyName+" value = "+value+" currentPage = "+c.getCurrentPage());
+
+		try {			
+			// 1st: check if object is present at locally loaded dataset:
+			List<T> items = (List<T>) pageableTable.getViewer().getInput();
+			List<T> itemsCopy = CoreUtils.copyList(items);
+					
+			T item = findItem(itemsCopy, propertyName, value);
+			if (item != null) {
+				logger.debug("found item in current page!");
+				selectElement(item);
+				return;
+			}
+			// 2nd: search pages one by one:
+			else {
+				List<T> itemsOfAlreadySearchedPage = itemsCopy;
+				int currentPage = c.getCurrentPage();
+				logger.debug("total elements = "+c.getTotalElements());
+				
+				PageableController c1 = new PageableController();
+				c1.setPageSize(c.getPageSize());
+				c1.setTotalElements(c.getTotalElements());
+				c1.setSort(c.getSortPropertyName(), c.getSortDirection());
+				c1.setCurrentPage(c.getCurrentPage());
+				
+				int l = 0;
+				int r = c1.getTotalPages()-1;
+				if(r==0) {
+					return;
+				}
+				
+			    while (l <= r) { 
+			        // find index of middle element 
+			        int m = (l+r)/2; 
+			        
+			        // already checked
+					if (true && m == currentPage) {
+						logger.debug("already checked this page: "+m);
+						items = itemsOfAlreadySearchedPage;
+//						continue; // never use continue in a while loop -> can easily lead to an endless loop...
+					}
+					// not checked -> retrieve items for this page from server
+					else {
+						logger.debug("page to look at: " + m);
+						c1.setCurrentPage(m);
+						c.setCurrentPage(m);
+						items = (List<T>) pageableTable.getViewer().getInput();
+					}
+					
+					itemsCopy = CoreUtils.copyList(items);
+					//items = res.getContent();
+					//
+			  
+					Integer firstValueInList = (Integer) PropertyUtils.getProperty(itemsCopy.get(0), propertyName);
+					Integer lastValueInList  = (Integer) PropertyUtils.getProperty(itemsCopy.get(itemsCopy.size()-1), propertyName);
+					
+//					logger.debug("firstValueInList for this page: " + firstValueInList);
+//					logger.debug("lastValueInList for this page: " + lastValueInList);
+					
+					Integer searchValue = (Integer) value;
+					
+					if (searchValue <= firstValueInList && searchValue >= lastValueInList) {
+						item = findItem(itemsCopy, propertyName, value);
+						if (item != null) {
+							logger.debug("found item in page "+m);
+							logger.debug("item found "+ item);
+							
+							selectElement(item);
+							
+							return;
+						}
+					}
+					
+			        // If x greater, ignore left half 
+			        if (firstValueInList > searchValue) {
+			        	l = m + 1; 
+			        }
+			        // If x is smaller, ignore right half 
+			        else{
+			        	r = m - 1;
+			        }
+			        
+			        logger.debug("new l is " + l);
+			        logger.debug("new r is " + r);
+			    } 
+			    // not found --> select first page
+			    c.setCurrentPage(0);
+			
+			}
+		}
+		catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+			logger.error(e.getMessage(), e);
+		}
 		
 	}
 
@@ -230,6 +341,11 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 				PagingToolBarNavigationRendererFactory.getFactory(),
 				PageableTable.getDefaultPageRendererBottomFactory()
 				) {
+			@Override
+			public void refreshPage() {
+				super.refreshPage();
+				tv.getTable().redraw(); // have to redraw table after page refresh -> bug in MacOS
+			}
 			
 //			@Override protected Composite createCompositeTop(Composite parent) {
 //				final PageableController c = pageableTable.getController();
@@ -271,8 +387,6 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 						super.widgetSelected(e);
 					}
 				};				
-				
-				
 				pageSizeComboDecorator.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 				pageSizeComboDecorator.pageSizeChanged(initialPageSize, initialPageSize, getController());
 				
@@ -293,7 +407,7 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 						onReloadButtonPressed();
 					}
 				});
-				loadingComposite.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+				loadingComposite.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
 								
 				return bottom;
 			}
@@ -396,6 +510,10 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 		}
 	}
 	
+	public void clearSelection() {
+		getTableViewer().setSelection(null);
+	}
+	
 	public T getFirstSelected() {
 		if(tv == null) {
 			return null;
@@ -413,6 +531,10 @@ public abstract class ATableWidgetPagination<T> extends Composite {
 	
 	public IStructuredSelection getSelectedAsIStructuredSelection() {
 		return ((IStructuredSelection) tv.getSelection());
+	}
+	
+	public List<T> getItemsOfCurrentPage() {
+		return (List<T>) pageableTable.getViewer().getInput();
 	}
 	
 	protected abstract void createColumns();

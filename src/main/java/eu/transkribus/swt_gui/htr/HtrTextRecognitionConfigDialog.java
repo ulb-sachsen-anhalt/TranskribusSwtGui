@@ -61,16 +61,17 @@ public class HtrTextRecognitionConfigDialog extends Dialog {
 		
 		htrModelsComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
-		htrModelsComp.htw.htrTv.addSelectionChangedListener(new ISelectionChangedListener() {
+		htrModelsComp.htw.getTableViewer().addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent arg0) {
 				updateUi();
 			}
 		});
 		
+	
 		Group dictGrp = new Group(sash, SWT.NONE);
 		dictGrp.setLayout(new GridLayout(1, false));
-		dictGrp.setText("Dictionary");
+		dictGrp.setText("Language Model");
 		
 		htrDictComp = new HtrDictionaryComposite(dictGrp, 0);
 		htrDictComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
@@ -87,6 +88,15 @@ public class HtrTextRecognitionConfigDialog extends Dialog {
 		});
 		
 		updateUi();
+		
+		/*
+		 * for selecting the previously chosen HTR model in the paged tree when opening the htr selection dialog
+		 */
+		if (config!= null && config.getHtrId()!=0) {
+			logger.debug("set the htr id to " + config.getHtrId());
+			htrModelsComp.setSelection(config.getHtrId());
+			htrModelsComp.htw.loadPage_useBinarySearch("htrId", config.getHtrId(), false);
+		}
 
 		return cont;
 	}
@@ -96,13 +106,15 @@ public class HtrTextRecognitionConfigDialog extends Dialog {
 			return;
 		}
 		final String provider = htrModelsComp.getSelectedHtr().getProvider();
-		if (!HtrPyLaiaUtils.doesDecodingSupportDicts() 
-				&& provider.equals(HtrPyLaiaUtils.PROVIDER_PYLAIA)) {
-			sash.setWeights(new int[] { 100, 0 });
+		if (provider.equals(HtrPyLaiaUtils.PROVIDER_PYLAIA)) {
+//			sash.setWeights(new int[] { 100, 0 });
+//			htrDictComp.updateUi(false, htrModelsComp.getSelectedHtr().isLanguageModelExists(), false);
+			htrDictComp.updateUi(false, true, false);
+			sash.setWeights(new int[] { 88, 12 });			
 		} else if (provider.equals(HtrCITlabUtils.PROVIDER_CITLAB_PLUS)
 				|| provider.equals(HtrCITlabUtils.PROVIDER_CITLAB)) {
 			//show option to select integrated dictionary if available for this model
-			htrDictComp.updateUi(false, htrModelsComp.getSelectedHtr().isLanguageModelExists());
+			htrDictComp.updateUi(false, htrModelsComp.getSelectedHtr().isLanguageModelExists(), true);
 			sash.setWeights(new int[] { 88, 12 });
 		} else {
 			sash.setWeights(new int[] { 88, 12 });
@@ -121,13 +133,12 @@ public class HtrTextRecognitionConfigDialog extends Dialog {
 			
 			TrpHtr selHtr = htrModelsComp.getSelectedHtr();
 			boolean showLangModOption = selHtr != null && selHtr.isLanguageModelExists();
-			htrDictComp.updateUi(false, showLangModOption);
-			
+			htrDictComp.updateUi(false, showLangModOption, true);
 			htrDictComp.updateSelection(config.getDictionary());
 			break;
 		case UPVLC:
 			htrModelsComp.setSelection(config.getHtrId());
-			htrDictComp.updateSelection(config.getDictionary());
+			htrDictComp.updateSelection(config.getLanguageModel());
 			break;
 		default:
 			break;
@@ -153,25 +164,43 @@ public class HtrTextRecognitionConfigDialog extends Dialog {
 
 	@Override
 	protected void okPressed() {
-		htrModelsComp.hdw.checkForUnsavedChanges();
-		TrpHtr htr = htrModelsComp.getSelectedHtr();
-		
-		Mode mode = getModeForProvider(htr.getProvider());
-		if (mode == null) {
-			DialogUtil.showErrorMessageBox(getShell(), "Error parsing mode from provider", "Unknown model provider: "+htr.getProvider());
-			return;
+		try {
+			htrModelsComp.hdw.checkForUnsavedChanges();
+			TrpHtr htr = htrModelsComp.getSelectedHtr();
+			
+			if (htr != null) {
+				Mode mode = getModeForProvider(htr.getProvider());
+				if (mode == null) {
+					DialogUtil.showErrorMessageBox(getShell(), "Error parsing mode from provider", "Unknown model provider: "+htr.getProvider());
+					return;
+				}
+				config = new TextRecognitionConfig(mode);
+				
+				if (mode == Mode.CITlab) { // FIXME: set language model here once ready for CITlab recognition
+					config.setDictionary(htrDictComp.getDictionarySetting());
+				}
+				else { // for PyLaia, only language model setting is relevant!
+					config.setLanguageModel(htrDictComp.getLanguageModelSetting());	
+				}
+				
+//				if (htr == null) {
+//					DialogUtil.showErrorMessageBox(this.getParentShell(), "Error", "Please select a HTR.");
+//					return;
+//				}
+				config.setHtrId(htr.getHtrId());
+				config.setHtrName(htr.getName());
+				config.setLanguage(htr.getLanguage());				
+			}
+			else {
+				logger.debug("model was probably deleted - setting config to null!");
+				config = null;
+			}
+		} catch (Exception e) {
+			logger.error("Error while setting HTR: "+e.getMessage(), e);
 		}
-		config = new TextRecognitionConfig(mode);
-		config.setDictionary(htrDictComp.getDictionarySetting());
-		
-		if (htr == null) {
-			DialogUtil.showErrorMessageBox(this.getParentShell(), "Error", "Please select a HTR.");
-			return;
+		finally {
+			super.okPressed();
 		}
-		config.setHtrId(htr.getHtrId());
-		config.setHtrName(htr.getName());
-		config.setLanguage(htr.getLanguage());
-		super.okPressed();
 	}
 	
 	@Override
@@ -194,7 +223,7 @@ public class HtrTextRecognitionConfigDialog extends Dialog {
 
 	@Override
 	protected void setShellStyle(int newShellStyle) {
-		super.setShellStyle(SWT.CLOSE | SWT.MAX | SWT.RESIZE | SWT.TITLE);
+		super.setShellStyle(SWT.APPLICATION_MODAL | SWT.CLOSE | SWT.MAX | SWT.RESIZE | SWT.TITLE);
 		// setBlockOnOpen(false);
 	}
 }

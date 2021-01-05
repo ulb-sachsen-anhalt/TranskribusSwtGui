@@ -585,7 +585,7 @@ public class CanvasSceneListener implements EventListener, ICanvasSceneListener 
 					
 				}				
 				
-				//for region types: otherwise the splitted elements got inserted at the end of the regions because they have not parent shape
+				//for region types: otherwise the split elements got inserted at the end of the regions because they have not parent shape
 				if (indexOfOrigShape == -1 && oldReadingOrder != null) {
 					indexOfOrigShape = oldReadingOrder;
 				}
