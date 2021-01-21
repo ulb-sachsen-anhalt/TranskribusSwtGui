@@ -39,6 +39,7 @@ import org.dea.fimagestore.core.beans.ImageMetadata;
 import org.dea.fimgstoreclient.FimgStoreGetClient;
 import org.dea.fimgstoreclient.beans.FimgStoreTxt;
 import org.dea.fimgstoreclient.beans.ImgType;
+import org.docx4j.docProps.core.dc.terms.URI;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
@@ -2355,10 +2356,19 @@ public class Storage {
 				}
 			}
 		};
-		DocExporter de = new DocExporter(conn.newFImagestoreGetClient(), cache);
-		de.addObserver(o);
-		de.exportDoc(doc, pars);
-
+		
+		// ULB Sachsen-Anhalt U.Hartwig Start
+		if (conn != null) {
+			DocExporter de = new DocExporter(conn.newFImagestoreGetClient(), cache);
+			de.addObserver(o);
+			de.exportDoc(doc, pars);
+		} else {
+			logger.warn("no login detected - use custom LocalDocExporter");
+			ULBLocalDocExporter de = new ULBLocalDocExporter();
+			de.addObserver(o);
+			de.exportDoc(doc, pars);
+		}
+		// ULB Sachsen-Anhalt U.Hartwig End
 		return path;
 	}
 
