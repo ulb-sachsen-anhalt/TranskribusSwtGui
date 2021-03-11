@@ -22,6 +22,9 @@ jobs:
         java-version: 11
     - name: Build with Maven
       run: |
+        git clone --branch 0.12.7 https://gitlab.com/readcoop/transkribus/TranskribusCore.git
+        cd TranskribusCore && mvn clean install -DskipTests
+        cd ${{github.workspace}}
         git clone --branch 0.3.5 https://gitlab.com/readcoop/transkribus/TranskribusClient.git
         cd TranskribusClient && mvn clean install -DskipTests
         cd ${{github.workspace}}
