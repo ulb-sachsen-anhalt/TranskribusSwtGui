@@ -21,4 +21,8 @@ jobs:
       with:
         java-version: 11
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: |
+        git clone --branch 0.3.5 https://gitlab.com/readcoop/transkribus/TranskribusClient
+        cd mets-model && mvn clean install -DskipTests
+        cd ${{github.workspace}}
+        mvn -B package --file pom.xml
