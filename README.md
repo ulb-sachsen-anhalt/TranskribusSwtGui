@@ -1,5 +1,7 @@
 # TranskribusSwtGui / Transkribus expert client / TranskribusX
 
+[![Java CI with Maven](https://github.com/ulb-sachsen-anhalt/TranskribusSwtGui/actions/workflows/maven.yml/badge.svg)](https://github.com/ulb-sachsen-anhalt/TranskribusSwtGui/actions/workflows/maven.yml)
+
 SWT based GUI for the Transkribus platform
 
 ## Build
